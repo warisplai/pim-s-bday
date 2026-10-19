@@ -651,14 +651,16 @@ const TEXT = {
         const want = !tense ? this.angleFor(idx) + (Math.random() - .5) * this.seg * .6
           : Math.random() < .5 ? -(idx + 1) * this.seg + hair // only just made it in
           : -idx * this.seg - hair;                             // almost slipped on to the next prize
-        this.pow = tense && !REDUCED ? 4 : 3; // a higher power spends longer crawling at the end
-        const secs = REDUCED ? 1.5 : tense ? 7 : 2.5; // shortest the slow-down can take
-        let target = this.rot + v * secs / this.pow;
+        // Braking has two parts: first from full speed down to `crawl` degrees a second, then a long,
+        // gentle crawl over the last `creep` degrees, so the final edge goes by really slowly.
+        const slow = tense && !REDUCED;
+        this.v0 = v;
+        this.crawl = slow ? 22 : 150;
+        this.creep = slow ? 100 : 30;
+        let target = this.rot + this.creep + (slow ? 600 : 360);
         target += (((want - target) % 360) + 360) % 360;
-        this.from = this.rot;
-        this.dist = target - this.rot;
-        this.dur = (this.pow * this.dist / v) * 1000; // ease-out that starts at the current speed
-        this.s0 = performance.now();
+        this.target = target;
+        this.brake = target - this.creep - this.rot; // length of the first part
         this.mode = 'stop';
         this.done = resolve;
         loop();
@@ -672,10 +674,12 @@ const TEXT = {
         this.set(this.rot + this.v * dt);
         return true;
       }
-      const t = Math.min(1, (now - this.s0) / this.dur);
-      this.speed = (this.pow * this.dist / (this.dur / 1000)) * Math.pow(1 - t, this.pow - 1);
-      this.set(this.from + this.dist * (1 - Math.pow(1 - t, this.pow)));
-      if (t < 1) return true;
+      const r = this.target - this.rot; // degrees still to go
+      this.speed = r > this.creep
+        ? this.crawl + (this.v0 - this.crawl) * (r - this.creep) / this.brake
+        : this.crawl * Math.sqrt(r / this.creep); // steady gentle braking: comes to rest exactly on target
+      this.set(this.rot + Math.min(r, Math.max(this.speed, .5) * dt));
+      if (this.target - this.rot > 1e-4) return true;
       this.mode = 'idle'; this.v = 0; this.speed = 0;
       this.done();
       return false;
