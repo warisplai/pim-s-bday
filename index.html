@@ -104,7 +104,10 @@
     letter-spacing: -.01em; color: var(--title); text-wrap: balance; overflow-wrap: anywhere;
     text-shadow: 0 3px 0 #fff, 0 7px 14px rgba(15, 85, 194, .25);
   }
-  .sub { margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--ink-soft); }
+  .sub {
+    margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--ink-soft);
+    transition: transform .25s cubic-bezier(.2, .9, .25, 1.5);
+  }
   /* the stage keeps the wheel's height, so nothing jumps when the present turns into it */
   .stage {
     position: relative; width: 100%; min-height: calc(min(340px, 100vw - 32px) + 92px);
@@ -783,6 +786,7 @@ const TEXT = {
     if (taps >= GIFT_TAPS) return openGift();
     hideError();
     el.sub.textContent = GIFT_TAPS - taps === 1 ? TEXT.tapLast : TEXT.tapAgain;
+    el.sub.style.transform = `scale(${1 + taps * .5})`; // the hint grows with every tap
     if (REDUCED) return;
     shakeGift(1 + taps * .8);
     const b = el.gift.querySelector('.gift-body').getBoundingClientRect();
@@ -806,6 +810,7 @@ const TEXT = {
     fx.burst(cx, cy, { count: REDUCED ? 40 : 170, speed: [400, 1050], up: 260 });
     await sleep(REDUCED ? 80 : 300);
     showMachine(true);
+    el.sub.style.transform = '';
     el.sub.textContent = TEXT.readyToSpin;
     el.spin.disabled = false;
     phase = 'wheel';
