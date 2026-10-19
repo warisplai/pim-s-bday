@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Happy birthday!</title>
+<meta name="theme-color" content="#0A1B4F">
+<meta property="og:title" content="A birthday present for you">
+<meta property="og:description" content="Open it and spin for your birthday money.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Mitr:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --midnight: #0A1B4F;
+    --party: #1E4FD8;
+    --party-hi: #3D72F5;
+    --sky: #7CC4FF;
+    --frost: #EAF4FF;
+    --gold: #FFC94A;
+    --gold-deep: #D9961A;
+    --muted: #B4C7F2;
+    --item: 64px;
+    --font: 'Fredoka', 'Mitr', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; }
+  body {
+    min-height: 100vh;
+    min-height: 100svh;
+    font-family: var(--font);
+    color: var(--frost);
+    background-color: var(--midnight);
+    background-image:
+      radial-gradient(circle at 50% 30%, rgba(61, 114, 245, .5), rgba(61, 114, 245, 0) 58%),
+      radial-gradient(circle, rgba(124, 196, 255, .22) 1.5px, transparent 2.2px),
+      radial-gradient(circle, rgba(255, 201, 74, .15) 1.5px, transparent 2.2px);
+    background-size: 100% 100%, 46px 46px, 74px 74px;
+    background-position: 0 0, 0 0, 23px 31px;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button { font-family: inherit; }
+  button:focus-visible { outline: 3px solid var(--frost); outline-offset: 5px; }
+
+  /* ---------- decoration ---------- */
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+  .balloons { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .balloon { position: absolute; width: 46px; opacity: .55; animation: float 9s ease-in-out infinite; }
+  .balloon.b1 { left: -14px; top: 28%; animation-delay: -2s; }
+  .balloon.b2 { right: -14px; top: 78%; width: 40px; animation-delay: -5s; }
+  .balloon.b3 { left: 5%; bottom: 5%; width: 34px; opacity: .35; animation-delay: -7s; }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(-3deg); }
+    50% { transform: translateY(-16px) rotate(3deg); }
+  }
+  .bunting { display: block; width: 100%; max-width: 560px; height: auto; margin: 0 auto; }
+  .flash {
+    position: fixed; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%;
+    background: radial-gradient(circle, #fff 0%, rgba(234, 244, 255, .9) 35%, rgba(124, 196, 255, 0) 70%);
+    pointer-events: none; z-index: 19; animation: boom .5s ease-out forwards;
+  }
+  @keyframes boom { from { transform: scale(.2); opacity: 1; } to { transform: scale(8); opacity: 0; } }
+
+  .demo {
+    position: relative; z-index: 2; margin: 0; padding: 8px 16px; text-align: center;
+    font-size: 13.5px; line-height: 1.4; color: var(--frost); background: rgba(255, 255, 255, .1);
+  }
+  .demo button {
+    margin-left: 6px; padding: 2px 10px; border: 1px solid rgba(234, 244, 255, .5); border-radius: 999px;
+    background: none; color: var(--frost); font-size: 13px; cursor: pointer;
+  }
+
+  /* ---------- layout ---------- */
+  .wrap {
+    position: relative; z-index: 1; max-width: 440px; margin: 0 auto;
+    padding: 0 16px max(40px, env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  h1 {
+    margin: 4px 0 0; font-weight: 700; font-size: clamp(36px, 10.5vw, 56px); line-height: 1.02;
+    letter-spacing: -.01em; color: var(--frost); text-wrap: balance; overflow-wrap: anywhere;
+    text-shadow: 0 3px 0 var(--party), 0 6px 0 rgba(6, 16, 60, .55);
+  }
+  .sub { margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--muted); }
+  /* the stage keeps the slot machine's height, so nothing jumps when the present turns into it */
+  .stage { position: relative; width: 100%; min-height: 330px; display: flex; align-items: center; justify-content: center; margin-top: 18px; }
+
+  /* ---------- present ---------- */
+  .gift {
+    position: relative; width: 190px; height: 196px; padding: 0; border: 0; background: none;
+    cursor: pointer; transform-origin: 50% 92%; animation: idle 3.6s ease-in-out infinite;
+  }
+  .gift:disabled { cursor: progress; animation: none; opacity: .7; }
+  .gift > span { position: absolute; display: block; }
+  .gift-glow {
+    left: 50%; bottom: -8px; width: 190px; height: 30px; transform: translateX(-50%);
+    background: radial-gradient(ellipse, rgba(124, 196, 255, .5), rgba(124, 196, 255, 0) 70%);
+  }
+  .gift-body {
+    left: 16px; right: 16px; bottom: 6px; height: 112px; border-radius: 8px 8px 18px 18px;
+    background:
+      radial-gradient(circle, rgba(255, 255, 255, .22) 4.5px, transparent 5.5px) 6px 10px / 30px 30px,
+      linear-gradient(180deg, var(--party-hi), var(--party));
+    box-shadow: inset 0 -12px 0 rgba(6, 20, 70, .25);
+    transition: transform .3s ease-out, opacity .3s ease-out;
+  }
+  .gift-lid {
+    left: 6px; right: 6px; bottom: 112px; height: 42px; border-radius: 12px;
+    background: linear-gradient(180deg, #6B95FF, var(--party-hi));
+    box-shadow: 0 6px 0 rgba(6, 20, 70, .35);
+    transition: transform .4s cubic-bezier(.2, .8, .3, 1), opacity .4s ease-out;
+  }
+  .ribbon {
+    position: absolute; left: 50%; top: 0; bottom: 0; width: 30px; transform: translateX(-50%);
+    background: linear-gradient(90deg, #CFE2FF, #fff 50%, #CFE2FF);
+  }
+  .bow { position: absolute; left: 50%; bottom: 100%; width: 0; height: 0; }
+  .bow i { position: absolute; display: block; }
+  .bow .loop { bottom: -8px; width: 50px; height: 36px; border: 10px solid #fff; border-radius: 50%; }
+  .bow .loop.l { right: -2px; transform: rotate(-24deg); }
+  .bow .loop.r { left: -2px; transform: rotate(24deg); }
+  .bow .knot { left: -12px; bottom: -10px; width: 24px; height: 20px; border-radius: 7px; background: #EAF4FF; }
+  .gift.shaking { animation: shake .65s cubic-bezier(.36, .07, .19, .97) both; }
+  .gift.pop { animation: none; }
+  .gift.pop .gift-lid { transform: translateY(-90px) rotate(-28deg); opacity: 0; }
+  .gift.pop .gift-body { transform: scale(1.25); opacity: 0; }
+  .gift.pop .gift-glow { opacity: 0; }
+  @keyframes idle {
+    0%, 100% { transform: translateY(0); }
+    35% { transform: translateY(-8px); }
+    70% { transform: translateY(0); }
+    76% { transform: rotate(-6deg); }
+    82% { transform: rotate(6deg); }
+    88% { transform: rotate(-3deg); }
+    94% { transform: rotate(0); }
+  }
+  @keyframes shake {
+    10%, 90% { transform: translateX(-2px) rotate(-2deg); }
+    20%, 80% { transform: translateX(4px) rotate(3deg); }
+    30%, 50%, 70% { transform: translateX(-7px) rotate(-6deg) scale(1.04); }
+    40%, 60% { transform: translateX(7px) rotate(6deg) scale(1.06); }
+  }
+
+  /* ---------- slot machine ---------- */
+  .machine {
+    width: 100%; max-width: 360px; padding: 12px 12px 16px; border-radius: 28px;
+    background: linear-gradient(180deg, #4A7DF7 0%, var(--party) 55%, #1739A6 100%);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), inset 0 -4px 0 rgba(6, 16, 60, .35), 0 22px 50px rgba(2, 8, 36, .55);
+  }
+  .machine.appear { animation: appear .6s cubic-bezier(.2, .9, .25, 1.25) both; }
+  @keyframes appear { from { transform: scale(.35); opacity: 0; } to { transform: none; opacity: 1; } }
+  .bulbs { display: flex; justify-content: space-between; padding: 2px 10px 10px; }
+  .bulbs i { width: 9px; height: 9px; border-radius: 50%; background: #FFE3A0; box-shadow: 0 0 6px rgba(255, 201, 74, .9); opacity: .45; }
+  .machine.spinning .bulbs i { animation: blink .5s steps(1) infinite; }
+  .machine.spinning .bulbs i:nth-child(even) { animation-delay: .25s; }
+  .machine.won .bulbs i { opacity: 1; }
+  @keyframes blink { 0% { opacity: 1; } 50% { opacity: .2; } }
+  .window {
+    position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;
+    padding: 8px; border-radius: 18px; background: var(--midnight); box-shadow: inset 0 3px 8px rgba(0, 0, 0, .45);
+  }
+  .reel { position: relative; height: calc(var(--item) * 3); overflow: hidden; border-radius: 12px; background: #fff; }
+  .reel::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(30, 79, 216, .42), rgba(30, 79, 216, 0) 34%, rgba(30, 79, 216, 0) 66%, rgba(30, 79, 216, .42));
+  }
+  .reel.thunk { animation: thunk .3s ease-out; }
+  @keyframes thunk { 35% { transform: translateY(4px); } 100% { transform: none; } }
+  .strip { will-change: transform; }
+  .reel.fast .strip { filter: blur(1.4px); }
+  .item {
+    height: var(--item); display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: clamp(20px, 6.4vw, 28px); color: var(--midnight);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .item.top { color: var(--party); }
+  .cur { font-size: .66em; font-weight: 500; margin-right: 1px; opacity: .65; }
+  .payline {
+    position: absolute; left: 3px; right: 3px; top: 50%; height: calc(var(--item) + 6px); transform: translateY(-50%);
+    border: 3px solid var(--gold); border-radius: 14px; pointer-events: none; box-shadow: 0 0 16px rgba(255, 201, 74, .35);
+  }
+  .machine.won .payline { animation: flash .3s steps(1) 6; }
+  @keyframes flash { 50% { border-color: #fff; box-shadow: 0 0 26px rgba(255, 255, 255, .75); } }
+  .spin-btn {
+    display: block; width: 100%; height: 58px; margin-top: 14px; border: 0; border-radius: 999px;
+    font-size: 24px; font-weight: 700; color: var(--midnight); cursor: pointer;
+    background: linear-gradient(180deg, #FFE08A, var(--gold));
+    box-shadow: 0 5px 0 var(--gold-deep), 0 10px 20px rgba(2, 8, 36, .35);
+    transition: transform .08s, box-shadow .08s;
+  }
+  .spin-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-deep); }
+  .spin-btn:disabled { cursor: default; color: rgba(234, 244, 255, .7); background: rgba(10, 27, 79, .5); box-shadow: inset 0 0 0 2px rgba(234, 244, 255, .16); }
+  .spin-btn.busy:disabled { color: var(--midnight); background: linear-gradient(180deg, #FFE08A, var(--gold)); opacity: .8; box-shadow: 0 2px 0 var(--gold-deep); }
+
+  /* ---------- messages ---------- */
+  .result { margin-top: 20px; }
+  .result.pop { animation: appear .5s cubic-bezier(.2, .9, .25, 1.3) both; }
+  .result-head { margin: 0; font-size: 20px; font-weight: 600; }
+  .result-amount {
+    margin: 4px 0 0; font-weight: 700; font-size: clamp(52px, 16vw, 76px); line-height: 1;
+    color: var(--gold); text-shadow: 0 4px 0 rgba(6, 16, 60, .6); font-variant-numeric: tabular-nums;
+  }
+  .result-amount .cur { font-size: .58em; opacity: .9; margin-right: 3px; }
+  .result-note { margin: 12px auto 0; max-width: 34ch; font-size: 16px; line-height: 1.45; color: var(--muted); }
+  .warning {
+    display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 360px; margin: 22px 0 0;
+    padding: 12px 14px; border-radius: 16px; text-align: left; font-size: 15.5px; font-weight: 500; line-height: 1.4;
+    color: #FFE3A0; background: rgba(255, 201, 74, .1); border: 1.5px solid rgba(255, 201, 74, .5);
+  }
+  .warning svg { flex: none; width: 20px; height: 20px; margin-top: 1px; }
+  .error {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; max-width: 360px;
+    margin-top: 20px; padding: 12px 14px; border-radius: 16px; text-align: left; font-size: 15.5px; line-height: 1.4;
+    color: #FFDADA; background: rgba(255, 110, 110, .12); border: 1.5px solid rgba(255, 140, 140, .5);
+  }
+  .error p { margin: 0; }
+  .error button {
+    padding: 8px 18px; border: 0; border-radius: 999px; cursor: pointer;
+    font-size: 15px; font-weight: 600; color: var(--midnight); background: var(--frost);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .gift, .balloon { animation: none; }
+    .machine.appear, .result.pop { animation-duration: .01s; }
+    .reel.fast .strip { filter: none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="fx" aria-hidden="true"></canvas>
+
+<div class="balloons" aria-hidden="true">
+  <svg class="balloon b1" viewBox="0 0 40 90"><path d="M20 56 C 18 66, 24 72, 20 90" stroke="rgba(234,244,255,.6)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#3D72F5"/><path d="M16 50 L24 50 L20 56 Z" fill="#3D72F5"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.35)"/></svg>
+  <svg class="balloon b2" viewBox="0 0 40 90"><path d="M20 56 C 23 66, 16 72, 20 90" stroke="rgba(234,244,255,.6)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#7CC4FF"/><path d="M16 50 L24 50 L20 56 Z" fill="#7CC4FF"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.4)"/></svg>
+  <svg class="balloon b3" viewBox="0 0 40 90"><path d="M20 56 C 18 66, 24 72, 20 90" stroke="rgba(234,244,255,.6)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#EAF4FF"/><path d="M16 50 L24 50 L20 56 Z" fill="#EAF4FF"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.6)"/></svg>
+</div>
+
+<p class="demo" id="demo" hidden>Preview mode: spins aren't saved. Add your Google Script link to go live.<button type="button" id="demoReset">Reset preview</button></p>
+
+<main class="wrap">
+  <svg class="bunting" id="bunting" viewBox="0 0 400 64" aria-hidden="true"></svg>
+
+  <h1 id="title">Happy birthday!</h1>
+  <p class="sub" id="sub"></p>
+
+  <section class="stage">
+    <button type="button" class="gift" id="gift" aria-label="Open your present" disabled>
+      <span class="gift-glow"></span>
+      <span class="gift-body"><span class="ribbon"></span></span>
+      <span class="gift-lid"><span class="ribbon"></span><span class="bow"><i class="loop l"></i><i class="loop r"></i><i class="knot"></i></span></span>
+    </button>
+
+    <div class="machine" id="machine" hidden>
+      <div class="bulbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="window" id="window" aria-hidden="true">
+        <div class="reel"><div class="strip"></div></div>
+        <div class="reel"><div class="strip"></div></div>
+        <div class="reel"><div class="strip"></div></div>
+        <div class="payline"></div>
+      </div>
+      <button type="button" class="spin-btn" id="spin" disabled>Spin</button>
+    </div>
+  </section>
+
+  <div class="result" id="result" role="status" aria-live="polite" hidden>
+    <p class="result-head" id="resultHead"></p>
+    <p class="result-amount" id="resultAmount"></p>
+    <p class="result-note" id="resultNote"></p>
+  </div>
+
+  <p class="warning" id="warning">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3z"/><path d="M12 10v4.5"/><path d="M12 17.6v.1"/></svg>
+    <span id="warningText"></span>
+  </p>
+
+  <div class="error" id="error" role="alert" hidden>
+    <p id="errorText"></p>
+    <button type="button" id="retry">Try again</button>
+  </div>
+</main>
+
+<script>
+/* ============================ SETUP ============================ */
+// Paste your Google Apps Script Web app URL here (it ends with /exec).
+// Leave it as it is to try the page in preview mode.
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxk2XEivcRKYB2DuW9l1ZB6bqwn3lw-NpXeP5l6il1m2mDz-KMP_l6zenwDcFzkbTPM/exec';
+
+// Words on the page. Change them to any language you like.
+const TEXT = {
+  title: name => name ? `Happy birthday, ${name}!` : 'Happy birthday!',
+  loading: 'Getting your present ready…',
+  tapGift: 'Tap the present to open it',
+  readyToSpin: 'Spin for your birthday money',
+  spin: 'Spin',
+  spinning: 'Spinning…',
+  used: 'Spin used',
+  warning: 'You only get one spin. Your result is saved, even if you refresh.',
+  wonHead: 'You won',
+  zeroHead: 'No luck this time',
+  alreadyWonHead: 'You already spun and won',
+  alreadyZeroHead: 'You already spun and got',
+  doneSub: 'Here’s your birthday money',
+  savedNote: when => `Saved on ${when}. That was your one spin.`,
+  alreadySub: 'You’ve already used your spin',
+  alreadyNote: when => `You spun on ${when}.`,
+  invalidSub: 'This link doesn’t work',
+  invalidNote: 'Ask the person who sent it to you for a new link.',
+  offline: 'Can’t connect right now. Check your internet, then try again.',
+  spinFailed: 'Your spin didn’t go through. Check your internet, then spin again.',
+  retry: 'Try again',
+};
+/* =============================================================== */
+
+(() => {
+  'use strict';
+
+  const DEMO = !/^https?:\/\//i.test(SCRIPT_URL.trim());
+  const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const CODE = (new URLSearchParams(location.search).get('code') || '').trim();
+  const ITEM_H = 64, REPEATS = 14, SPEED = REDUCED ? 1100 : 1700, ACCEL = 5200;
+
+  const $ = id => document.getElementById(id);
+  const el = {
+    title: $('title'), sub: $('sub'), gift: $('gift'), machine: $('machine'), window: $('window'),
+    spin: $('spin'), result: $('result'), resultHead: $('resultHead'), resultAmount: $('resultAmount'),
+    resultNote: $('resultNote'), warning: $('warning'), error: $('error'), errorText: $('errorText'), retry: $('retry'),
+  };
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+  const info = { name: '', prizes: [0, 150, 250, 350, 500, 777], currency: '฿' };
+  let phase = 'loading';
+  let reels = [];
+  let retryAction = null;
+
+  /* ---------------- talking to the Google Script ---------------- */
+  const api = DEMO ? previewApi() : scriptApi();
+
+  function scriptApi() {
+    const base = SCRIPT_URL.trim();
+    async function call(url, opts = {}) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 25000);
+      try {
+        const res = await fetch(url, { ...opts, signal: ctrl.signal });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return await res.json();
+      } catch (err) {
+        console.error('[birthday-spin] Could not reach the Google Script. Check SCRIPT_URL, and that the Web app is deployed with "Who has access: Anyone".', err);
+        throw err;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    return {
+      status: () => call(`${base}?action=status&code=${encodeURIComponent(CODE)}&t=${Date.now()}`),
+      // text/plain body keeps this a "simple" request, which Apps Script accepts from any site
+      spin: () => call(base, { method: 'POST', body: JSON.stringify({ action: 'spin', code: CODE }) }),
+    };
+  }
+
+  function previewApi() {
+    const KEY = 'birthday-spin-preview';
+    const chances = [15, 25, 25, 15, 12, 8];
+    let mem = null;
+    const load = () => { try { const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : mem; } catch { return mem; } };
+    const save = v => { mem = v; try { v ? localStorage.setItem(KEY, JSON.stringify(v)) : localStorage.removeItem(KEY); } catch {} };
+    const meta = () => ({ name: '', prizes: [0, 150, 250, 350, 500, 777], currency: '฿' });
+    return {
+      async status() {
+        await sleep(450);
+        const s = load();
+        return s ? { ...meta(), state: 'spun', already: true, ...s } : { ...meta(), state: 'ready' };
+      },
+      async spin() {
+        await sleep(700);
+        const s = load();
+        if (s) return { ...meta(), state: 'spun', already: true, ...s };
+        const prizes = meta().prizes;
+        let r = Math.random() * 100, prize = prizes[prizes.length - 1];
+        for (let i = 0; i < prizes.length; i++) { r -= chances[i]; if (r < 0) { prize = prizes[i]; break; } }
+        const rec = { prize, time: new Date().toISOString() };
+        save(rec);
+        return { ...meta(), state: 'spun', already: false, ...rec };
+      },
+      reset() { save(null); },
+    };
+  }
+
+  /* ---------------- particles ---------------- */
+  const fx = (() => {
+    const canvas = $('fx');
+    const ctx = canvas.getContext('2d');
+    const COLORS = ['#EAF4FF', '#FFFFFF', '#7CC4FF', '#3D72F5', '#9FD3FF', '#FFC94A'];
+    const COOL = ['#EAF4FF', '#7CC4FF', '#3D72F5', '#9FD3FF'];
+    let W = 0, H = 0, parts = [], raf = 0, last = 0;
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const pick = a => a[(Math.random() * a.length) | 0];
+
+    function size() {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      W = innerWidth; H = innerHeight;
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    size();
+    addEventListener('resize', size);
+
+    function make(x, y, vx, vy, opts) {
+      const r = Math.random();
+      const k = opts.coins === false ? (r < .65 ? 'rect' : r < .82 ? 'dot' : 'star')
+        : (r < .52 ? 'rect' : r < .68 ? 'dot' : r < .84 ? 'star' : 'coin');
+      return {
+        x, y, vx, vy, k,
+        c: k === 'coin' ? '#FFC94A' : pick(opts.coins === false ? COOL : COLORS),
+        s: k === 'coin' ? rand(6, 9) : k === 'star' ? rand(5, 9) : rand(2.5, 4.5),
+        w: rand(6, 10), h: rand(9, 15), rot: rand(0, 6.28), vr: rand(-9, 9),
+        flip: rand(0, 6.28), vf: rand(6, 14), life: 0, max: opts.life ? rand(...opts.life) : rand(1.6, 2.8),
+      };
+    }
+    function add(p) { if (parts.length < 700) parts.push(p); }
+    function burst(x, y, opts = {}) {
+      const { count = 120, speed = [350, 950], up = 220 } = opts;
+      for (let i = 0; i < count; i++) {
+        const a = rand(0, Math.PI * 2), sp = rand(speed[0] * .3, speed[1]) * (.6 + .4 * Math.random());
+        add(make(x, y, Math.cos(a) * sp, Math.sin(a) * sp - up, opts));
+      }
+      run();
+    }
+    function rain(count = 120) {
+      for (let i = 0; i < count; i++) add(make(rand(0, W), rand(-H * .5, -10), rand(-60, 60), rand(60, 240), { life: [3.5, 5.5] }));
+      run();
+    }
+    function run() { if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); } }
+    function step(now) {
+      const dt = Math.min(.04, (now - last) / 1000); last = now;
+      ctx.clearRect(0, 0, W, H);
+      parts = parts.filter(p => p.life < p.max && p.y < H + 40);
+      for (const p of parts) {
+        const drag = p.k === 'rect' || p.k === 'star' ? 2.4 : 1.3;
+        p.vx -= p.vx * drag * dt;
+        p.vy += (980 - p.vy * drag) * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        p.rot += p.vr * dt; p.flip += p.vf * dt; p.life += dt;
+        ctx.globalAlpha = Math.max(0, Math.min(1, (p.max - p.life) / .5));
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.c;
+        if (p.k === 'rect') {
+          ctx.scale(1, Math.cos(p.flip));
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        } else if (p.k === 'dot') {
+          ctx.beginPath(); ctx.arc(0, 0, p.s, 0, 6.283); ctx.fill();
+        } else if (p.k === 'star') {
+          const s = p.s, t = s * .28;
+          ctx.beginPath();
+          ctx.moveTo(0, -s); ctx.lineTo(t, -t); ctx.lineTo(s, 0); ctx.lineTo(t, t);
+          ctx.lineTo(0, s); ctx.lineTo(-t, t); ctx.lineTo(-s, 0); ctx.lineTo(-t, -t);
+          ctx.closePath(); ctx.fill();
+        } else {
+          ctx.scale(Math.cos(p.flip), 1);
+          ctx.beginPath(); ctx.arc(0, 0, p.s, 0, 6.283); ctx.fill();
+          ctx.strokeStyle = '#D9961A'; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.arc(0, 0, p.s * .62, 0, 6.283); ctx.stroke();
+        }
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+      raf = parts.length ? requestAnimationFrame(step) : 0;
+      if (!raf) ctx.clearRect(0, 0, W, H);
+    }
+    return { burst, rain };
+  })();
+
+  function flashAt(x, y) {
+    const f = document.createElement('div');
+    f.className = 'flash';
+    f.style.left = x + 'px';
+    f.style.top = y + 'px';
+    document.body.appendChild(f);
+    f.addEventListener('animationend', () => f.remove());
+  }
+
+  /* ---------------- reels ---------------- */
+  function shuffle(a) {
+    for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
+  function money(v) {
+    const frag = document.createDocumentFragment();
+    const c = document.createElement('span');
+    c.className = 'cur';
+    c.textContent = info.currency;
+    frag.append(c, document.createTextNode(Number(v).toLocaleString()));
+    return frag;
+  }
+
+  class Reel {
+    constructor(node, values) {
+      this.node = node;
+      this.strip = node.querySelector('.strip');
+      this.order = shuffle(values.slice());
+      this.n = this.order.length;
+      this.cycle = this.n * ITEM_H;
+      this.mode = 'idle'; this.v = 0; this.speed = 0; this.top = 0;
+      const top = Math.max(...values);
+      this.strip.replaceChildren();
+      for (let r = 0; r < REPEATS; r++) {
+        for (const v of this.order) {
+          const d = document.createElement('div');
+          d.className = 'item' + (v === top ? ' top' : '');
+          d.append(money(v));
+          this.strip.append(d);
+        }
+      }
+    }
+    topFor(i) { return (i - 1) * ITEM_H; } // scroll position that puts item i on the gold line
+    set(t) { this.top = t; this.strip.style.transform = `translate3d(0, ${-t}px, 0)`; }
+    rest(value) {
+      const idx = Math.max(0, this.order.indexOf(Number(value)));
+      this.mode = 'idle'; this.v = 0;
+      this.set(this.topFor(10 * this.n + idx));
+    }
+    start(delay) { this.mode = 'run'; this.v = 0; this.startAt = performance.now() + delay; }
+    stopOn(value) {
+      return new Promise(resolve => {
+        value = Number(value);
+        const v = Math.max(this.v, 600);
+        const limit = this.top - this.cycle; // always roll at least one more lap
+        let i = Math.floor(limit / ITEM_H) + 1;
+        let guard = this.n * 3;
+        while (guard-- > 0 && (this.order[((i % this.n) + this.n) % this.n] !== value || this.topFor(i) > limit)) i--;
+        const target = this.topFor(i);
+        this.from = this.top;
+        this.dist = this.top - target;
+        this.dur = Math.min(2600, Math.max(450, (3 * this.dist / v) * 1000)); // ease-out that starts at the current speed
+        this.s0 = performance.now();
+        this.mode = 'stop';
+        this.done = resolve;
+        loop();
+      });
+    }
+    update(now, dt) {
+      if (this.mode === 'idle') return false;
+      if (this.mode === 'run') {
+        if (now < this.startAt) return true;
+        this.v = Math.min(SPEED, this.v + ACCEL * dt);
+        let t = this.top - this.v * dt;
+        if (t < 4 * this.cycle) t += 6 * this.cycle; // seamless wrap: the strip repeats
+        this.set(t);
+        this.speed = this.v;
+      } else {
+        const t = Math.min(1, (now - this.s0) / this.dur);
+        this.set(this.from - this.dist * (1 - Math.pow(1 - t, 3)));
+        this.speed = (3 * this.dist / (this.dur / 1000)) * Math.pow(1 - t, 2);
+        if (t >= 1) {
+          this.mode = 'idle'; this.v = 0; this.speed = 0;
+          this.node.classList.remove('fast', 'thunk');
+          void this.node.offsetWidth;
+          this.node.classList.add('thunk');
+          this.done();
+          return false;
+        }
+      }
+      this.node.classList.toggle('fast', !REDUCED && this.speed > 700);
+      return true;
+    }
+  }
+
+  let raf = 0, lastT = 0;
+  function loop() {
+    if (raf) return;
+    lastT = performance.now();
+    raf = requestAnimationFrame(tick);
+  }
+  function tick(now) {
+    const dt = Math.min(.05, (now - lastT) / 1000);
+    lastT = now;
+    let active = false;
+    for (const r of reels) active = r.update(now, dt) || active;
+    raf = active ? requestAnimationFrame(tick) : 0;
+  }
+
+  function buildReels() {
+    if (reels.length) return;
+    const nodes = el.window.querySelectorAll('.reel');
+    reels = Array.from(nodes, n => new Reel(n, info.prizes));
+    const p = info.prizes;
+    reels.forEach((r, k) => r.rest(p[(k * 2) % p.length])); // start on three different amounts
+  }
+
+  /* ---------------- screens ---------------- */
+  function applyInfo(s) {
+    if (Array.isArray(s.prizes) && s.prizes.length) info.prizes = s.prizes.map(Number);
+    if (typeof s.currency === 'string') info.currency = s.currency;
+    info.name = s.name || '';
+    el.title.textContent = TEXT.title(info.name);
+    document.title = TEXT.title(info.name);
+  }
+
+  function showError(message, retry) {
+    el.errorText.textContent = message;
+    retryAction = retry || null;
+    el.retry.hidden = !retry;
+    el.error.hidden = false;
+  }
+  function hideError() { el.error.hidden = true; }
+
+  function showMachine(animate) {
+    buildReels();
+    el.gift.hidden = true;
+    el.machine.hidden = false;
+    if (animate) el.machine.classList.add('appear');
+  }
+
+  function showResult(res, kind) {
+    const zero = Number(res.prize) <= 0;
+    const when = formatTime(res.time);
+    el.resultHead.textContent = kind === 'new'
+      ? (zero ? TEXT.zeroHead : TEXT.wonHead)
+      : (zero ? TEXT.alreadyZeroHead : TEXT.alreadyWonHead);
+    el.resultAmount.replaceChildren(money(res.prize));
+    el.resultNote.textContent = kind === 'new' ? TEXT.savedNote(when) : TEXT.alreadyNote(when);
+    el.result.hidden = false;
+    el.result.classList.remove('pop');
+    void el.result.offsetWidth;
+    el.result.classList.add('pop');
+  }
+
+  function formatTime(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return String(iso || '');
+    return d.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  }
+
+  function finish(res, kind) {
+    phase = 'done';
+    el.machine.classList.remove('spinning');
+    el.machine.classList.add('won');
+    el.spin.classList.remove('busy');
+    el.spin.disabled = true;
+    el.spin.textContent = TEXT.used;
+    el.warning.hidden = true;
+    el.sub.textContent = kind === 'new' ? TEXT.doneSub : TEXT.alreadySub;
+    showResult(res, kind);
+    if (kind === 'new') celebrate(Number(res.prize));
+  }
+
+  function showSpun(s) {
+    showMachine(false);
+    reels.forEach(r => r.rest(s.prize));
+    finish(s, 'already');
+  }
+
+  function showInvalid() {
+    phase = 'invalid';
+    el.gift.hidden = true;
+    el.machine.hidden = true;
+    el.warning.hidden = true;
+    el.sub.textContent = TEXT.invalidSub;
+    showError(TEXT.invalidNote);
+  }
+
+  function celebrate(prize) {
+    const r = el.window.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const sorted = [...info.prizes].sort((a, b) => a - b);
+    const rank = Math.max(0, sorted.indexOf(prize)) / Math.max(1, sorted.length - 1);
+    if (prize <= 0) {
+      fx.burst(cx, cy, { count: 28, speed: [160, 420], up: 120, coins: false });
+      return;
+    }
+    fx.burst(cx, cy, { count: REDUCED ? 40 : Math.round(80 + rank * 120), speed: [300, 900 + rank * 300] });
+    if (!REDUCED && rank >= .6) fx.rain(rank >= 1 ? 220 : 110);
+  }
+
+  /* ---------------- actions ---------------- */
+  async function openGift() {
+    if (phase !== 'gift') return;
+    phase = 'opening';
+    hideError();
+    const g = el.gift;
+    if (!REDUCED) {
+      g.classList.add('shaking');
+      await sleep(650);
+    }
+    const b = g.querySelector('.gift-body').getBoundingClientRect();
+    const cx = b.left + b.width / 2, cy = b.top + b.height / 2;
+    g.classList.remove('shaking');
+    g.classList.add('pop');
+    flashAt(cx, cy);
+    fx.burst(cx, cy, { count: REDUCED ? 40 : 170, speed: [400, 1050], up: 260 });
+    await sleep(REDUCED ? 80 : 300);
+    showMachine(true);
+    el.sub.textContent = TEXT.readyToSpin;
+    el.spin.disabled = false;
+    phase = 'slot';
+    el.spin.focus({ preventScroll: true });
+  }
+
+  async function stopNeutral() {
+    const p = shuffle(info.prizes.slice());
+    await Promise.all(reels.map((r, k) => r.stopOn(p[k % p.length])));
+  }
+
+  async function spinFailed(message) {
+    await stopNeutral();
+    el.machine.classList.remove('spinning');
+    el.spin.classList.remove('busy');
+    el.spin.textContent = TEXT.spin;
+    el.spin.disabled = false;
+    phase = 'slot';
+    showError(message);
+  }
+
+  async function doSpin() {
+    if (phase !== 'slot') return;
+    phase = 'spinning';
+    hideError();
+    el.spin.disabled = true;
+    el.spin.classList.add('busy');
+    el.spin.textContent = TEXT.spinning;
+    el.machine.classList.add('spinning');
+    reels.forEach((r, k) => r.start(k * 90));
+    loop();
+
+    const minSpin = sleep(REDUCED ? 500 : 1400);
+    let res;
+    try {
+      res = await api.spin();
+    } catch (err) {
+      await minSpin;
+      return spinFailed(TEXT.spinFailed);
+    }
+    await minSpin;
+    if (res.state === 'invalid') { await stopNeutral(); return showInvalid(); }
+    if (res.state !== 'spun') {
+      console.error('[birthday-spin] Script error:', res.message);
+      return spinFailed(TEXT.spinFailed);
+    }
+
+    // Stop the reels one by one on the prize the server picked
+    const stops = [];
+    for (let k = 0; k < reels.length; k++) {
+      stops.push(reels[k].stopOn(res.prize));
+      if (k < reels.length - 1) await sleep(REDUCED ? 120 : 430);
+    }
+    await Promise.all(stops);
+    finish(res, res.already ? 'already' : 'new');
+  }
+
+  async function boot() {
+    phase = 'loading';
+    hideError();
+    el.sub.textContent = TEXT.loading;
+    el.gift.disabled = true;
+    let s;
+    try {
+      s = await api.status();
+    } catch (err) {
+      el.sub.textContent = '';
+      return showError(TEXT.offline, boot);
+    }
+    applyInfo(s);
+    if (s.state === 'invalid') return showInvalid();
+    if (s.state === 'spun') return showSpun(s);
+    if (s.state === 'ready') {
+      phase = 'gift';
+      el.gift.disabled = false;
+      el.sub.textContent = TEXT.tapGift;
+      return;
+    }
+    console.error('[birthday-spin] Script error:', s.message);
+    el.sub.textContent = '';
+    showError(TEXT.offline, boot);
+  }
+
+  function buildBunting() {
+    const svg = $('bunting');
+    const NS = 'http://www.w3.org/2000/svg';
+    const colors = ['#EAF4FF', '#7CC4FF', '#3D72F5', '#FFC94A'];
+    const y = x => 6 + 20 * (1 - Math.pow((x - 200) / 200, 2));
+    const line = document.createElementNS(NS, 'path');
+    line.setAttribute('d', 'M0 6 Q200 46 400 6');
+    line.setAttribute('fill', 'none');
+    line.setAttribute('stroke', 'rgba(234,244,255,.55)');
+    line.setAttribute('stroke-width', '1.5');
+    svg.append(line);
+    for (let i = 0; i < 13; i++) {
+      const x = 22 + i * 29.7;
+      const flag = document.createElementNS(NS, 'path');
+      flag.setAttribute('d', `M${x - 11} ${y(x - 11)} L${x + 11} ${y(x + 11)} L${x} ${y(x) + 26} Z`);
+      flag.setAttribute('fill', colors[i % colors.length]);
+      svg.append(flag);
+    }
+  }
+
+  /* ---------------- start ---------------- */
+  $('warningText').textContent = TEXT.warning;
+  el.spin.textContent = TEXT.spin;
+  el.retry.textContent = TEXT.retry;
+  el.gift.addEventListener('click', openGift);
+  el.spin.addEventListener('click', doSpin);
+  el.retry.addEventListener('click', () => { const a = retryAction; hideError(); if (a) a(); });
+  if (DEMO) {
+    $('demo').hidden = false;
+    $('demoReset').addEventListener('click', () => { api.reset(); location.reload(); });
+  }
+  buildBunting();
+  boot();
+})();
+</script>
+</body>
+</html>
