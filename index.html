@@ -661,14 +661,17 @@ const TEXT = {
         const idx = Math.max(0, this.values.indexOf(norm(value)));
         const v = Math.max(this.v, 300);
         const hair = 2 + Math.random() * 3; // degrees short of the edge
+        const slow = tense && !REDUCED;
+        const nearlyOut = tense && Math.random() < .5;
         // the wheel turns clockwise, so the pointer enters slice i at its (i + 1) edge and leaves at its i edge
         const want = !tense ? this.angleFor(idx) + (Math.random() - .5) * this.seg * .6
-          : Math.random() < .5 ? -(idx + 1) * this.seg + hair // only just made it in
-          : -idx * this.seg - hair;                             // almost slipped on to the next prize
+          : !nearlyOut ? -(idx + 1) * this.seg + hair // only just made it in
+          // almost slipped on to the next prize: aim a little past the next edge so the wheel still has some
+          // speed when that edge touches the pointer, then it bounces back (see 'rebound' in update)
+          : slow ? -idx * this.seg + 3 : -idx * this.seg - hair;
         // Braking has two parts. First the wheel stays fast and only drops to `crawl` degrees a second
         // just before the last block; then it crawls over the last `creep` degrees (less than one block,
         // so the slow part never drags across two).
-        const slow = tense && !REDUCED;
         this.v0 = v;
         this.crawl = slow ? 28 : 150;
         this.creep = slow ? 62 : 30;
@@ -676,6 +679,8 @@ const TEXT = {
         target += (((want - target) % 360) + 360) % 360;
         this.target = target;
         this.brake = target - this.creep - this.rot; // length of the first part
+        this.contact = slow && nearlyOut ? target - 3.3 : null; // where the next edge's line meets the pointer
+        this.back = 2.5 + Math.random() * 2.5; // how far the wheel bounces back off it
         this.mode = 'stop';
         this.done = resolve;
         loop();
@@ -689,13 +694,26 @@ const TEXT = {
         this.set(this.rot + this.v * dt);
         return true;
       }
-      const r = this.target - this.rot; // degrees still to go
-      const u = (r - this.creep) / this.brake; // 1 when braking starts, 0 where the crawl starts
-      this.speed = r > this.creep
-        ? this.crawl + (this.v0 - this.crawl) * (1 - (1 - u) * (1 - u)) // stays fast, drops off just before the last block
-        : this.crawl * Math.sqrt(r / this.creep); // steady gentle braking: comes to rest exactly on target
-      this.set(this.rot + Math.min(r, Math.max(this.speed, .5) * dt));
-      if (this.target - this.rot > 1e-4) return true;
+      if (this.mode === 'rebound') { // bounce back a little off the edge that touched the pointer
+        const p = Math.min(1, (now - this.reboundAt) / 450);
+        this.set(this.contact - this.back * (1 - Math.pow(1 - p, 3)));
+        if (p < 1) return true;
+      } else {
+        const r = this.target - this.rot; // degrees still to go
+        const u = (r - this.creep) / this.brake; // 1 when braking starts, 0 where the crawl starts
+        this.speed = r > this.creep
+          ? this.crawl + (this.v0 - this.crawl) * (1 - (1 - u) * (1 - u)) // stays fast, drops off just before the last block
+          : this.crawl * Math.sqrt(r / this.creep); // steady gentle braking: comes to rest exactly on target
+        const next = this.rot + Math.min(r, Math.max(this.speed, .5) * dt);
+        if (this.contact !== null && next >= this.contact) { // the edge's line has reached the pointer
+          this.set(this.contact);
+          if (!REDUCED) this.kick = -7; // nudge the pointer a little
+          this.mode = 'rebound'; this.reboundAt = now; this.speed = 0;
+          return true;
+        }
+        this.set(next);
+        if (this.target - this.rot > 1e-4) return true;
+      }
       this.mode = 'idle'; this.v = 0; this.speed = 0;
       this.done();
       return false;
