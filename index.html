@@ -566,6 +566,7 @@ const TEXT = {
       this.pointer = $('pointerArm');
       this.mode = 'idle'; this.v = 0; this.speed = 0; this.rot = 0; this.edge = 0;
       this.tilt = 0; this.tiltV = 0; // pointer angle (degrees) and how fast it's swinging
+      this.kick = null; // while an edge is lifting the pointer: the angle it's being lifted to
       this.draw();
     }
     draw() {
@@ -627,20 +628,23 @@ const TEXT = {
       this.rot = r;
       this.disc.setAttribute('transform', `rotate(${(r % 360).toFixed(2)} ${C} ${C})`);
       const edge = Math.floor(r / this.seg);
-      if (edge !== this.edge) { // a slice edge just hit the pointer: kick it up (harder when the wheel is slow)
+      if (edge !== this.edge) { // a slice edge just hit the pointer: lift it (higher when the wheel is slow)
         this.edge = edge;
-        if (!REDUCED && this.mode !== 'idle') {
-          this.tilt = -18 - 10 * Math.min(1, Math.max(0, (300 - this.speed) / 300));
-          this.tiltV = 0;
-        }
+        if (!REDUCED && this.mode !== 'idle') this.kick = -18 - 10 * Math.min(1, Math.max(0, (300 - this.speed) / 300));
       }
     }
-    // The pointer falls back on a soft spring: slowly, with a small bounce. Returns false once it's still.
+    // The pointer rises quickly but smoothly while an edge lifts it, then falls back slowly on a soft,
+    // well-damped spring that settles with only a tiny bounce. Returns false once it's still.
     swing(dt) {
-      if (!this.tilt && !this.tiltV) return false;
-      this.tiltV += (-10 * this.tilt - 3.4 * this.tiltV) * dt; // lower numbers = slower fall
-      this.tilt += this.tiltV * dt;
-      if (Math.abs(this.tilt) < .05 && Math.abs(this.tiltV) < .05) { this.tilt = 0; this.tiltV = 0; }
+      if (this.kick !== null) {
+        this.tilt += (this.kick - this.tilt) * (1 - Math.exp(-dt / .035));
+        if (this.tilt - this.kick < 1) { this.kick = null; this.tiltV = 0; } // top of the lift: let go
+      } else {
+        if (!this.tilt && !this.tiltV) return false;
+        this.tiltV += (-8 * this.tilt - 3.9 * this.tiltV) * dt; // lower numbers = slower fall
+        this.tilt += this.tiltV * dt;
+        if (Math.abs(this.tilt) < .05 && Math.abs(this.tiltV) < .05) { this.tilt = 0; this.tiltV = 0; }
+      }
       this.pointer.setAttribute('transform', `rotate(${this.tilt.toFixed(2)} 22 15)`);
       return true;
     }
