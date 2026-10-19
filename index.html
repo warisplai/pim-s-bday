@@ -364,7 +364,8 @@ const TEXT = {
   const DEMO = !/^https?:\/\//i.test(SCRIPT_URL.trim());
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const CODE = (new URLSearchParams(location.search).get('code') || '').trim();
-  const SPEED = REDUCED ? 360 : 760, ACCEL = 900; // wheel speed in degrees per second
+  const SPEED = REDUCED ? 360 : 900, ACCEL = 1100; // wheel speed in degrees per second
+  const SLOWMO_MS = 1000; // how long a slow-motion moment lasts
 
   const $ = id => document.getElementById(id);
   const el = {
@@ -562,7 +563,7 @@ const TEXT = {
       this.seg = 360 / this.n; // every slice is the same size: every prize has the same chance
       this.disc = $('disc');
       this.pointer = $('pointer');
-      this.mode = 'idle'; this.v = 0; this.speed = 0; this.rot = 0; this.edge = 0;
+      this.mode = 'idle'; this.v = 0; this.speed = 0; this.rot = 0; this.edge = 0; this.slowmoAt = null;
       this.draw();
     }
     draw() {
@@ -627,10 +628,11 @@ const TEXT = {
       if (edge !== this.edge) { // a slice edge just passed the pointer: flick it
         this.edge = edge;
         if (!REDUCED && this.mode !== 'idle' && this.pointer.animate) {
-          const crawl = Math.min(1, Math.max(0, (300 - this.speed) / 300)); // 0 when fast, 1 when barely moving
+          // 0 when fast, 1 when barely moving or in slow motion
+          const crawl = this.slowmoAt !== null ? 1 : Math.min(1, Math.max(0, (300 - this.speed) / 300));
           this.pointer.animate(
-            [{ transform: 'rotate(0)' }, { transform: `rotate(${-18 - crawl * 10}deg)` }, { transform: 'rotate(0)' }],
-            { duration: 150 + crawl * 300, easing: 'ease-out' });
+            [{ transform: 'rotate(0)' }, { transform: `rotate(${-18 - crawl * 12}deg)` }, { transform: 'rotate(0)' }],
+            { duration: this.slowmoAt !== null ? 700 : 150 + crawl * 300, easing: 'ease-out' });
         }
       }
     }
@@ -651,20 +653,44 @@ const TEXT = {
         const want = !tense ? this.angleFor(idx) + (Math.random() - .5) * this.seg * .6
           : Math.random() < .5 ? -(idx + 1) * this.seg + hair // only just made it in
           : -idx * this.seg - hair;                             // almost slipped on to the next prize
-        // Braking has two parts: first from full speed down to `crawl` degrees a second, then a long,
-        // gentle crawl over the last `creep` degrees, so the final edge goes by really slowly.
+        // Braking has two parts. First the wheel stays fast and only drops to `crawl` degrees a second
+        // just before the last block; then it crawls over the last `creep` degrees (less than one block,
+        // so the slow part never drags across two). Along the way a couple of edges get a slow-motion moment.
         const slow = tense && !REDUCED;
         this.v0 = v;
-        this.crawl = slow ? 22 : 150;
-        this.creep = slow ? 100 : 30;
-        let target = this.rot + this.creep + (slow ? 600 : 360);
+        this.crawl = slow ? 28 : 150;
+        this.creep = slow ? 62 : 30;
+        let target = this.rot + this.creep + (slow ? 540 : 360);
         target += (((want - target) % 360) + 360) % 360;
         this.target = target;
         this.brake = target - this.creep - this.rot; // length of the first part
+        this.slowmos = slow ? 2 : 0; // slow-motion moments still allowed
+        this.slowmoAt = null; this.considered = null; this.calmUntil = -Infinity;
         this.mode = 'stop';
         this.done = resolve;
         loop();
       });
+    }
+    // 1 = normal speed. Sometimes, just as the pointer reaches an edge (but not in the last two blocks),
+    // time drops to slow motion for a second and then snaps back.
+    timeScale(now, r) {
+      if (this.slowmoAt !== null) {
+        const p = (now - this.slowmoAt) / SLOWMO_MS;
+        if (p < 1) return 1 - .85 * Math.min(1, Math.sin(Math.PI * p) * 1.6);
+        this.slowmoAt = null;
+      }
+      const edge = Math.floor(this.rot / this.seg);
+      if (this.slowmos > 0 && r > this.creep + this.seg * 1.5 && edge !== this.considered && edge >= this.calmUntil) {
+        const toEdge = (edge + 1) * this.seg - this.rot;
+        if (toEdge < this.speed * .12) { // about to reach this edge: roll the dice once for it
+          this.considered = edge;
+          if (Math.random() < .3) {
+            this.slowmoAt = now; this.slowmos--;
+            this.calmUntil = edge + 4; // let a few edges go by at full speed before the next one
+          }
+        }
+      }
+      return 1;
     }
     update(now, dt) {
       if (this.mode === 'idle') return false;
@@ -675,12 +701,13 @@ const TEXT = {
         return true;
       }
       const r = this.target - this.rot; // degrees still to go
+      const u = (r - this.creep) / this.brake; // 1 when braking starts, 0 where the crawl starts
       this.speed = r > this.creep
-        ? this.crawl + (this.v0 - this.crawl) * (r - this.creep) / this.brake
+        ? this.crawl + (this.v0 - this.crawl) * (1 - (1 - u) * (1 - u)) // stays fast, drops off just before the last block
         : this.crawl * Math.sqrt(r / this.creep); // steady gentle braking: comes to rest exactly on target
-      this.set(this.rot + Math.min(r, Math.max(this.speed, .5) * dt));
+      this.set(this.rot + Math.min(r, Math.max(this.speed, .5) * dt * this.timeScale(now, r)));
       if (this.target - this.rot > 1e-4) return true;
-      this.mode = 'idle'; this.v = 0; this.speed = 0;
+      this.mode = 'idle'; this.v = 0; this.speed = 0; this.slowmoAt = null;
       this.done();
       return false;
     }
