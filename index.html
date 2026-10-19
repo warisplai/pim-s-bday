@@ -4,23 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Happy birthday!</title>
-<meta name="theme-color" content="#0A1B4F">
+<meta name="theme-color" content="#5DB7F2">
 <meta property="og:title" content="A birthday present for you">
-<meta property="og:description" content="Open it and spin for your birthday money.">
+<meta property="og:description" content="Open it and spin for your birthday prize.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%81%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Mitr:wght@400;500;600&display=swap">
 <style>
   :root {
-    --midnight: #0A1B4F;
-    --party: #1E4FD8;
-    --party-hi: #3D72F5;
-    --sky: #7CC4FF;
+    --midnight: #0B2A5B;
+    --ink-soft: #22507F;
+    --party: #1E6FD9;
+    --party-hi: #4B9BF0;
+    --title: #0F55C2;
+    --sky-top: #5DB7F2;
+    --sky-mid: #9AD5FA;
+    --sky-low: #DDF2FF;
     --frost: #EAF4FF;
     --gold: #FFC94A;
     --gold-deep: #D9961A;
-    --muted: #B4C7F2;
     --item: 64px;
     --font: 'Fredoka', 'Mitr', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
   }
@@ -31,27 +34,45 @@
     min-height: 100vh;
     min-height: 100svh;
     font-family: var(--font);
-    color: var(--frost);
-    background-color: var(--midnight);
-    background-image:
-      radial-gradient(circle at 50% 30%, rgba(61, 114, 245, .5), rgba(61, 114, 245, 0) 58%),
-      radial-gradient(circle, rgba(124, 196, 255, .22) 1.5px, transparent 2.2px),
-      radial-gradient(circle, rgba(255, 201, 74, .15) 1.5px, transparent 2.2px);
-    background-size: 100% 100%, 46px 46px, 74px 74px;
-    background-position: 0 0, 0 0, 23px 31px;
+    color: var(--midnight);
+    background-color: var(--sky-mid);
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
   }
   button { font-family: inherit; }
-  button:focus-visible { outline: 3px solid var(--frost); outline-offset: 5px; }
+  button:focus-visible { outline: 3px solid var(--midnight); outline-offset: 5px; }
+
+  /* ---------- sky ---------- */
+  .sky {
+    position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+    background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 48%, var(--sky-low) 100%);
+  }
+  .sun {
+    position: absolute; top: -70px; right: -70px; width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, #FFF8D6 0 34%, rgba(255, 234, 150, .6) 36%, rgba(255, 234, 150, 0) 70%);
+  }
+  /* a cloud is a pill with two puffs on top; font-size sets its size */
+  .cloud {
+    position: absolute; left: 0; width: 7em; height: 2em; border-radius: 999px; background: #fff;
+    opacity: .92; animation: drift linear infinite;
+  }
+  .cloud::before, .cloud::after { content: ""; position: absolute; border-radius: 50%; background: inherit; }
+  .cloud::before { width: 3.2em; height: 3.2em; left: 1.1em; bottom: .7em; }
+  .cloud::after { width: 2.2em; height: 2.2em; right: 1.2em; bottom: .6em; }
+  .cloud.c1 { top: 9%; font-size: 22px; animation-duration: 95s; animation-delay: -20s; }
+  .cloud.c2 { top: 31%; font-size: 14px; opacity: .75; animation-duration: 120s; animation-delay: -75s; }
+  .cloud.c3 { top: 56%; font-size: 26px; animation-duration: 110s; animation-delay: -50s; }
+  .cloud.c4 { top: 78%; font-size: 17px; opacity: .8; animation-duration: 90s; animation-delay: -8s; }
+  .cloud.c5 { top: 19%; font-size: 12px; opacity: .65; animation-duration: 140s; animation-delay: -100s; }
+  @keyframes drift { from { transform: translateX(-100%); } to { transform: translateX(100vw); } }
 
   /* ---------- decoration ---------- */
   #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
   .balloons { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
-  .balloon { position: absolute; width: 46px; opacity: .55; animation: float 9s ease-in-out infinite; }
+  .balloon { position: absolute; width: 46px; opacity: .85; animation: float 9s ease-in-out infinite; }
   .balloon.b1 { left: -14px; top: 28%; animation-delay: -2s; }
   .balloon.b2 { right: -14px; top: 78%; width: 40px; animation-delay: -5s; }
-  .balloon.b3 { left: 5%; bottom: 5%; width: 34px; opacity: .35; animation-delay: -7s; }
+  .balloon.b3 { left: 5%; bottom: 5%; width: 34px; opacity: .7; animation-delay: -7s; }
   @keyframes float {
     0%, 100% { transform: translateY(0) rotate(-3deg); }
     50% { transform: translateY(-16px) rotate(3deg); }
@@ -66,11 +87,11 @@
 
   .demo {
     position: relative; z-index: 2; margin: 0; padding: 8px 16px; text-align: center;
-    font-size: 13.5px; line-height: 1.4; color: var(--frost); background: rgba(255, 255, 255, .1);
+    font-size: 13.5px; line-height: 1.4; color: var(--midnight); background: rgba(255, 255, 255, .55);
   }
   .demo button {
-    margin-left: 6px; padding: 2px 10px; border: 1px solid rgba(234, 244, 255, .5); border-radius: 999px;
-    background: none; color: var(--frost); font-size: 13px; cursor: pointer;
+    margin-left: 6px; padding: 2px 10px; border: 1px solid rgba(11, 42, 91, .35); border-radius: 999px;
+    background: none; color: var(--midnight); font-size: 13px; cursor: pointer;
   }
 
   /* ---------- layout ---------- */
@@ -81,10 +102,10 @@
   }
   h1 {
     margin: 4px 0 0; font-weight: 700; font-size: clamp(36px, 10.5vw, 56px); line-height: 1.02;
-    letter-spacing: -.01em; color: var(--frost); text-wrap: balance; overflow-wrap: anywhere;
-    text-shadow: 0 3px 0 var(--party), 0 6px 0 rgba(6, 16, 60, .55);
+    letter-spacing: -.01em; color: var(--title); text-wrap: balance; overflow-wrap: anywhere;
+    text-shadow: 0 3px 0 #fff, 0 7px 14px rgba(15, 85, 194, .25);
   }
-  .sub { margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--muted); }
+  .sub { margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--ink-soft); }
   /* the stage keeps the slot machine's height, so nothing jumps when the present turns into it */
   .stage { position: relative; width: 100%; min-height: 330px; display: flex; align-items: center; justify-content: center; margin-top: 18px; }
 
@@ -97,7 +118,7 @@
   .gift > span { position: absolute; display: block; }
   .gift-glow {
     left: 50%; bottom: -8px; width: 190px; height: 30px; transform: translateX(-50%);
-    background: radial-gradient(ellipse, rgba(124, 196, 255, .5), rgba(124, 196, 255, 0) 70%);
+    background: radial-gradient(ellipse, rgba(15, 70, 150, .28), rgba(15, 70, 150, 0) 70%);
   }
   .gift-body {
     left: 16px; right: 16px; bottom: 6px; height: 112px; border-radius: 8px 8px 18px 18px;
@@ -109,20 +130,20 @@
   }
   .gift-lid {
     left: 6px; right: 6px; bottom: 112px; height: 42px; border-radius: 12px;
-    background: linear-gradient(180deg, #6B95FF, var(--party-hi));
+    background: linear-gradient(180deg, #7DB8FF, var(--party-hi));
     box-shadow: 0 6px 0 rgba(6, 20, 70, .35);
     transition: transform .4s cubic-bezier(.2, .8, .3, 1), opacity .4s ease-out;
   }
   .ribbon {
     position: absolute; left: 50%; top: 0; bottom: 0; width: 30px; transform: translateX(-50%);
-    background: linear-gradient(90deg, #CFE2FF, #fff 50%, #CFE2FF);
+    background: linear-gradient(90deg, #F2B630, #FFE08A 50%, #F2B630);
   }
   .bow { position: absolute; left: 50%; bottom: 100%; width: 0; height: 0; }
   .bow i { position: absolute; display: block; }
-  .bow .loop { bottom: -8px; width: 50px; height: 36px; border: 10px solid #fff; border-radius: 50%; }
+  .bow .loop { bottom: -8px; width: 50px; height: 36px; border: 10px solid var(--gold); border-radius: 50%; }
   .bow .loop.l { right: -2px; transform: rotate(-24deg); }
   .bow .loop.r { left: -2px; transform: rotate(24deg); }
-  .bow .knot { left: -12px; bottom: -10px; width: 24px; height: 20px; border-radius: 7px; background: #EAF4FF; }
+  .bow .knot { left: -12px; bottom: -10px; width: 24px; height: 20px; border-radius: 7px; background: #F2B630; }
   .gift.shaking { animation: shake .65s cubic-bezier(.36, .07, .19, .97) both; }
   .gift.pop { animation: none; }
   .gift.pop .gift-lid { transform: translateY(-90px) rotate(-28deg); opacity: 0; }
@@ -147,8 +168,8 @@
   /* ---------- slot machine ---------- */
   .machine {
     width: 100%; max-width: 360px; padding: 12px 12px 16px; border-radius: 28px;
-    background: linear-gradient(180deg, #4A7DF7 0%, var(--party) 55%, #1739A6 100%);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), inset 0 -4px 0 rgba(6, 16, 60, .35), 0 22px 50px rgba(2, 8, 36, .55);
+    background: linear-gradient(180deg, #5AA2F5 0%, var(--party) 55%, #1553B0 100%);
+    box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), inset 0 -4px 0 rgba(6, 16, 60, .35), 0 22px 50px rgba(15, 60, 130, .35);
   }
   .machine.appear { animation: appear .6s cubic-bezier(.2, .9, .25, 1.25) both; }
   @keyframes appear { from { transform: scale(.35); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -165,7 +186,7 @@
   .reel { position: relative; height: calc(var(--item) * 3); overflow: hidden; border-radius: 12px; background: #fff; }
   .reel::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(180deg, rgba(30, 79, 216, .42), rgba(30, 79, 216, 0) 34%, rgba(30, 79, 216, 0) 66%, rgba(30, 79, 216, .42));
+    background: linear-gradient(180deg, rgba(30, 111, 217, .42), rgba(30, 111, 217, 0) 34%, rgba(30, 111, 217, 0) 66%, rgba(30, 111, 217, .42));
   }
   .reel.thunk { animation: thunk .3s ease-out; }
   @keyframes thunk { 35% { transform: translateY(4px); } 100% { transform: none; } }
@@ -177,6 +198,11 @@
     font-variant-numeric: tabular-nums; white-space: nowrap;
   }
   .item.top { color: var(--party); }
+  /* a prize that is a word, like the art toy */
+  .item.word {
+    padding: 0 4px; font-size: clamp(13px, 3.8vw, 17px); font-weight: 700; line-height: 1.1;
+    color: var(--party); white-space: normal; text-align: center;
+  }
   .cur { font-size: .66em; font-weight: 500; margin-right: 1px; opacity: .65; }
   .payline {
     position: absolute; left: 3px; right: 3px; top: 50%; height: calc(var(--item) + 6px); transform: translateY(-50%);
@@ -201,29 +227,31 @@
   .result-head { margin: 0; font-size: 20px; font-weight: 600; }
   .result-amount {
     margin: 4px 0 0; font-weight: 700; font-size: clamp(52px, 16vw, 76px); line-height: 1;
-    color: var(--gold); text-shadow: 0 4px 0 rgba(6, 16, 60, .6); font-variant-numeric: tabular-nums;
+    color: var(--title); text-shadow: 0 4px 0 var(--gold), 0 10px 22px rgba(15, 85, 194, .25); font-variant-numeric: tabular-nums;
   }
+  .result-amount.word { font-size: clamp(38px, 11vw, 58px); line-height: 1.1; }
   .result-amount .cur { font-size: .58em; opacity: .9; margin-right: 3px; }
-  .result-note { margin: 12px auto 0; max-width: 34ch; font-size: 16px; line-height: 1.45; color: var(--muted); }
+  .result-note { margin: 12px auto 0; max-width: 34ch; font-size: 16px; line-height: 1.45; color: var(--ink-soft); }
   .warning {
     display: flex; gap: 10px; align-items: flex-start; width: 100%; max-width: 360px; margin: 22px 0 0;
     padding: 12px 14px; border-radius: 16px; text-align: left; font-size: 15.5px; font-weight: 500; line-height: 1.4;
-    color: #FFE3A0; background: rgba(255, 201, 74, .1); border: 1.5px solid rgba(255, 201, 74, .5);
+    color: #6E4300; background: rgba(255, 240, 190, .8); border: 1.5px solid rgba(217, 150, 26, .55);
   }
   .warning svg { flex: none; width: 20px; height: 20px; margin-top: 1px; }
   .error {
     display: flex; flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; max-width: 360px;
     margin-top: 20px; padding: 12px 14px; border-radius: 16px; text-align: left; font-size: 15.5px; line-height: 1.4;
-    color: #FFDADA; background: rgba(255, 110, 110, .12); border: 1.5px solid rgba(255, 140, 140, .5);
+    color: #8A1C1C; background: rgba(255, 236, 236, .9); border: 1.5px solid rgba(220, 80, 80, .5);
   }
   .error p { margin: 0; }
   .error button {
     padding: 8px 18px; border: 0; border-radius: 999px; cursor: pointer;
-    font-size: 15px; font-weight: 600; color: var(--midnight); background: var(--frost);
+    font-size: 15px; font-weight: 600; color: #fff; background: var(--party);
   }
 
   @media (prefers-reduced-motion: reduce) {
     .gift, .balloon { animation: none; }
+    .cloud { animation-play-state: paused; }
     .machine.appear, .result.pop { animation-duration: .01s; }
     .reel.fast .strip { filter: none; }
   }
@@ -232,10 +260,15 @@
 <body>
 <canvas id="fx" aria-hidden="true"></canvas>
 
+<div class="sky" aria-hidden="true">
+  <div class="sun"></div>
+  <i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i><i class="cloud c4"></i><i class="cloud c5"></i>
+</div>
+
 <div class="balloons" aria-hidden="true">
-  <svg class="balloon b1" viewBox="0 0 40 90"><path d="M20 56 C 18 66, 24 72, 20 90" stroke="rgba(234,244,255,.6)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#3D72F5"/><path d="M16 50 L24 50 L20 56 Z" fill="#3D72F5"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.35)"/></svg>
-  <svg class="balloon b2" viewBox="0 0 40 90"><path d="M20 56 C 23 66, 16 72, 20 90" stroke="rgba(234,244,255,.6)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#7CC4FF"/><path d="M16 50 L24 50 L20 56 Z" fill="#7CC4FF"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.4)"/></svg>
-  <svg class="balloon b3" viewBox="0 0 40 90"><path d="M20 56 C 18 66, 24 72, 20 90" stroke="rgba(234,244,255,.6)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#EAF4FF"/><path d="M16 50 L24 50 L20 56 Z" fill="#EAF4FF"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.6)"/></svg>
+  <svg class="balloon b1" viewBox="0 0 40 90"><path d="M20 56 C 18 66, 24 72, 20 90" stroke="rgba(11,42,91,.3)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#1E6FD9"/><path d="M16 50 L24 50 L20 56 Z" fill="#1E6FD9"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.35)"/></svg>
+  <svg class="balloon b2" viewBox="0 0 40 90"><path d="M20 56 C 23 66, 16 72, 20 90" stroke="rgba(11,42,91,.3)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#FFC94A"/><path d="M16 50 L24 50 L20 56 Z" fill="#FFC94A"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(255,255,255,.5)"/></svg>
+  <svg class="balloon b3" viewBox="0 0 40 90"><path d="M20 56 C 18 66, 24 72, 20 90" stroke="rgba(11,42,91,.3)" stroke-width="1.2" fill="none"/><ellipse cx="20" cy="26" rx="18" ry="24" fill="#FFFFFF"/><path d="M16 50 L24 50 L20 56 Z" fill="#FFFFFF"/><ellipse cx="13" cy="17" rx="4" ry="7" fill="rgba(93,183,242,.35)"/></svg>
 </div>
 
 <p class="demo" id="demo" hidden>Preview mode: spins aren't saved. Add your Google Script link to go live.<button type="button" id="demoReset">Reset preview</button></p>
@@ -293,7 +326,7 @@ const TEXT = {
   title: name => name ? `Happy birthday, ${name}!` : 'Happy birthday!',
   loading: 'Getting your present ready…',
   tapGift: 'Tap the present to open it',
-  readyToSpin: 'Spin for your birthday money',
+  readyToSpin: 'Spin for your birthday prize',
   spin: 'Spin',
   spinning: 'Spinning…',
   used: 'Spin used',
@@ -302,7 +335,7 @@ const TEXT = {
   zeroHead: 'No luck this time',
   alreadyWonHead: 'You already spun and won',
   alreadyZeroHead: 'You already spun and got',
-  doneSub: 'Here’s your birthday money',
+  doneSub: 'Here’s your birthday prize',
   savedNote: when => `Saved on ${when}. That was your one spin.`,
   alreadySub: 'You’ve already used your spin',
   alreadyNote: when => `You spun on ${when}.`,
@@ -329,7 +362,9 @@ const TEXT = {
     resultNote: $('resultNote'), warning: $('warning'), error: $('error'), errorText: $('errorText'), retry: $('retry'),
   };
   const sleep = ms => new Promise(r => setTimeout(r, ms));
-  const info = { name: '', prizes: [0, 150, 250, 350, 500, 777], currency: '฿' };
+  // A prize is an amount (150) or a word ('1 art toy'). Amounts that arrive as text become numbers again.
+  const norm = v => typeof v === 'number' ? v : /^\s*-?\d+(\.\d+)?\s*$/.test(v) ? Number(v) : String(v ?? '').trim();
+  const info = { name: '', prizes: [150, 250, 350, '1 art toy', 777], currency: '฿' };
   let phase = 'loading';
   let reels = [];
   let retryAction = null;
@@ -362,11 +397,10 @@ const TEXT = {
 
   function previewApi() {
     const KEY = 'birthday-spin-preview';
-    const chances = [15, 25, 25, 15, 12, 8];
     let mem = null;
     const load = () => { try { const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : mem; } catch { return mem; } };
     const save = v => { mem = v; try { v ? localStorage.setItem(KEY, JSON.stringify(v)) : localStorage.removeItem(KEY); } catch {} };
-    const meta = () => ({ name: '', prizes: [0, 150, 250, 350, 500, 777], currency: '฿' });
+    const meta = () => ({ name: '', prizes: [150, 250, 350, '1 art toy', 777], currency: '฿' });
     return {
       async status() {
         await sleep(450);
@@ -378,8 +412,7 @@ const TEXT = {
         const s = load();
         if (s) return { ...meta(), state: 'spun', already: true, ...s };
         const prizes = meta().prizes;
-        let r = Math.random() * 100, prize = prizes[prizes.length - 1];
-        for (let i = 0; i < prizes.length; i++) { r -= chances[i]; if (r < 0) { prize = prizes[i]; break; } }
+        const prize = prizes[(Math.random() * prizes.length) | 0]; // every prize has the same chance
         const rec = { prize, time: new Date().toISOString() };
         save(rec);
         return { ...meta(), state: 'spun', already: false, ...rec };
@@ -392,8 +425,8 @@ const TEXT = {
   const fx = (() => {
     const canvas = $('fx');
     const ctx = canvas.getContext('2d');
-    const COLORS = ['#EAF4FF', '#FFFFFF', '#7CC4FF', '#3D72F5', '#9FD3FF', '#FFC94A'];
-    const COOL = ['#EAF4FF', '#7CC4FF', '#3D72F5', '#9FD3FF'];
+    const COLORS = ['#1E6FD9', '#0B4FB3', '#FFFFFF', '#4B9BF0', '#FFC94A', '#F2B630'];
+    const COOL = ['#1E6FD9', '#0B4FB3', '#FFFFFF', '#4B9BF0'];
     let W = 0, H = 0, parts = [], raf = 0, last = 0;
     const rand = (a, b) => a + Math.random() * (b - a);
     const pick = a => a[(Math.random() * a.length) | 0];
@@ -488,12 +521,13 @@ const TEXT = {
     for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
     return a;
   }
-  function money(v) {
+  function prizeNode(v) {
+    if (typeof v !== 'number') return document.createTextNode(v);
     const frag = document.createDocumentFragment();
     const c = document.createElement('span');
     c.className = 'cur';
     c.textContent = info.currency;
-    frag.append(c, document.createTextNode(Number(v).toLocaleString()));
+    frag.append(c, document.createTextNode(v.toLocaleString()));
     return frag;
   }
 
@@ -505,13 +539,13 @@ const TEXT = {
       this.n = this.order.length;
       this.cycle = this.n * ITEM_H;
       this.mode = 'idle'; this.v = 0; this.speed = 0; this.top = 0;
-      const top = Math.max(...values);
+      const top = Math.max(...values.filter(v => typeof v === 'number'));
       this.strip.replaceChildren();
       for (let r = 0; r < REPEATS; r++) {
         for (const v of this.order) {
           const d = document.createElement('div');
-          d.className = 'item' + (v === top ? ' top' : '');
-          d.append(money(v));
+          d.className = 'item' + (typeof v !== 'number' ? ' word' : v === top ? ' top' : '');
+          d.append(prizeNode(v));
           this.strip.append(d);
         }
       }
@@ -519,14 +553,14 @@ const TEXT = {
     topFor(i) { return (i - 1) * ITEM_H; } // scroll position that puts item i on the gold line
     set(t) { this.top = t; this.strip.style.transform = `translate3d(0, ${-t}px, 0)`; }
     rest(value) {
-      const idx = Math.max(0, this.order.indexOf(Number(value)));
+      const idx = Math.max(0, this.order.indexOf(norm(value)));
       this.mode = 'idle'; this.v = 0;
       this.set(this.topFor(10 * this.n + idx));
     }
     start(delay) { this.mode = 'run'; this.v = 0; this.startAt = performance.now() + delay; }
     stopOn(value) {
       return new Promise(resolve => {
-        value = Number(value);
+        value = norm(value);
         const v = Math.max(this.v, 600);
         const limit = this.top - this.cycle; // always roll at least one more lap
         let i = Math.floor(limit / ITEM_H) + 1;
@@ -593,7 +627,7 @@ const TEXT = {
 
   /* ---------------- screens ---------------- */
   function applyInfo(s) {
-    if (Array.isArray(s.prizes) && s.prizes.length) info.prizes = s.prizes.map(Number);
+    if (Array.isArray(s.prizes) && s.prizes.length) info.prizes = s.prizes.map(norm);
     if (typeof s.currency === 'string') info.currency = s.currency;
     info.name = s.name || '';
     el.title.textContent = TEXT.title(info.name);
@@ -616,12 +650,14 @@ const TEXT = {
   }
 
   function showResult(res, kind) {
-    const zero = Number(res.prize) <= 0;
+    const prize = norm(res.prize);
+    const zero = typeof prize === 'number' && prize <= 0;
     const when = formatTime(res.time);
     el.resultHead.textContent = kind === 'new'
       ? (zero ? TEXT.zeroHead : TEXT.wonHead)
       : (zero ? TEXT.alreadyZeroHead : TEXT.alreadyWonHead);
-    el.resultAmount.replaceChildren(money(res.prize));
+    el.resultAmount.classList.toggle('word', typeof prize !== 'number');
+    el.resultAmount.replaceChildren(prizeNode(prize));
     el.resultNote.textContent = kind === 'new' ? TEXT.savedNote(when) : TEXT.alreadyNote(when);
     el.result.hidden = false;
     el.result.classList.remove('pop');
@@ -645,7 +681,7 @@ const TEXT = {
     el.warning.hidden = true;
     el.sub.textContent = kind === 'new' ? TEXT.doneSub : TEXT.alreadySub;
     showResult(res, kind);
-    if (kind === 'new') celebrate(Number(res.prize));
+    if (kind === 'new') celebrate(norm(res.prize));
   }
 
   function showSpun(s) {
@@ -666,9 +702,10 @@ const TEXT = {
   function celebrate(prize) {
     const r = el.window.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-    const sorted = [...info.prizes].sort((a, b) => a - b);
-    const rank = Math.max(0, sorted.indexOf(prize)) / Math.max(1, sorted.length - 1);
-    if (prize <= 0) {
+    const amounts = info.prizes.filter(p => typeof p === 'number').sort((a, b) => a - b);
+    // a word prize (the art toy) gets the biggest party
+    const rank = typeof prize !== 'number' ? 1 : Math.max(0, amounts.indexOf(prize)) / Math.max(1, amounts.length - 1);
+    if (typeof prize === 'number' && prize <= 0) {
       fx.burst(cx, cy, { count: 28, speed: [160, 420], up: 120, coins: false });
       return;
     }
@@ -780,12 +817,12 @@ const TEXT = {
   function buildBunting() {
     const svg = $('bunting');
     const NS = 'http://www.w3.org/2000/svg';
-    const colors = ['#EAF4FF', '#7CC4FF', '#3D72F5', '#FFC94A'];
+    const colors = ['#1E6FD9', '#FFFFFF', '#FFC94A', '#4B9BF0'];
     const y = x => 6 + 20 * (1 - Math.pow((x - 200) / 200, 2));
     const line = document.createElementNS(NS, 'path');
     line.setAttribute('d', 'M0 6 Q200 46 400 6');
     line.setAttribute('fill', 'none');
-    line.setAttribute('stroke', 'rgba(234,244,255,.55)');
+    line.setAttribute('stroke', 'rgba(11,42,91,.35)');
     line.setAttribute('stroke-width', '1.5');
     svg.append(line);
     for (let i = 0; i < 13; i++) {
