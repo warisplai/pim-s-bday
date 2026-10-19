@@ -24,7 +24,6 @@
     --frost: #EAF4FF;
     --gold: #FFC94A;
     --gold-deep: #D9961A;
-    --item: 64px;
     --font: 'Fredoka', 'Mitr', ui-rounded, system-ui, -apple-system, 'Segoe UI', sans-serif;
   }
   * { box-sizing: border-box; }
@@ -106,8 +105,11 @@
     text-shadow: 0 3px 0 #fff, 0 7px 14px rgba(15, 85, 194, .25);
   }
   .sub { margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--ink-soft); }
-  /* the stage keeps the slot machine's height, so nothing jumps when the present turns into it */
-  .stage { position: relative; width: 100%; min-height: 330px; display: flex; align-items: center; justify-content: center; margin-top: 18px; }
+  /* the stage keeps the wheel's height, so nothing jumps when the present turns into it */
+  .stage {
+    position: relative; width: 100%; min-height: calc(min(340px, 100vw - 32px) + 92px);
+    display: flex; align-items: center; justify-content: center; margin-top: 18px;
+  }
 
   /* ---------- present ---------- */
   .gift {
@@ -165,60 +167,40 @@
     40%, 60% { transform: translateX(7px) rotate(6deg) scale(1.06); }
   }
 
-  /* ---------- slot machine ---------- */
-  .machine {
-    width: 100%; max-width: 360px; padding: 12px 12px 16px; border-radius: 28px;
-    background: linear-gradient(180deg, #5AA2F5 0%, var(--party) 55%, #1553B0 100%);
-    box-shadow: inset 0 2px 0 rgba(255, 255, 255, .35), inset 0 -4px 0 rgba(6, 16, 60, .35), 0 22px 50px rgba(15, 60, 130, .35);
-  }
-  .machine.appear { animation: appear .6s cubic-bezier(.2, .9, .25, 1.25) both; }
+  /* ---------- prize wheel ---------- */
+  .wheel-box { width: 100%; max-width: 340px; margin-top: 14px; }
+  .wheel-box.appear { animation: appear .6s cubic-bezier(.2, .9, .25, 1.25) both; }
   @keyframes appear { from { transform: scale(.35); opacity: 0; } to { transform: none; opacity: 1; } }
-  .bulbs { display: flex; justify-content: space-between; padding: 2px 10px 10px; }
-  .bulbs i { width: 9px; height: 9px; border-radius: 50%; background: #FFE3A0; box-shadow: 0 0 6px rgba(255, 201, 74, .9); opacity: .45; }
-  .machine.spinning .bulbs i { animation: blink .5s steps(1) infinite; }
-  .machine.spinning .bulbs i:nth-child(even) { animation-delay: .25s; }
-  .machine.won .bulbs i { opacity: 1; }
-  @keyframes blink { 0% { opacity: 1; } 50% { opacity: .2; } }
-  .window {
-    position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;
-    padding: 8px; border-radius: 18px; background: var(--midnight); box-shadow: inset 0 3px 8px rgba(0, 0, 0, .45);
+  .wheel-wrap { position: relative; }
+  .wheel-wrap::before {
+    content: ""; position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
+    box-shadow: 0 18px 40px rgba(15, 60, 130, .35);
   }
-  .reel { position: relative; height: calc(var(--item) * 3); overflow: hidden; border-radius: 12px; background: #fff; }
-  .reel::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(180deg, rgba(30, 111, 217, .42), rgba(30, 111, 217, 0) 34%, rgba(30, 111, 217, 0) 66%, rgba(30, 111, 217, .42));
+  .wheel { position: relative; display: block; width: 100%; height: auto; }
+  .seg-label { font-weight: 700; font-size: 27px; font-variant-numeric: tabular-nums; }
+  .seg-label.word { font-size: 19px; }
+  .seg-label .cur { font-size: 18px; font-weight: 600; opacity: .75; }
+  .bulb { fill: #FFE3A0; opacity: .5; }
+  .wheel-box.spinning .bulb { animation: blink .5s steps(1) infinite; }
+  .wheel-box.spinning .bulb:nth-child(even) { animation-delay: .25s; }
+  .wheel-box.won .bulb { opacity: 1; }
+  @keyframes blink { 0% { opacity: 1; } 50% { opacity: .25; } }
+  .pointer {
+    position: absolute; z-index: 1; left: 50%; top: -14px; width: 44px; height: 56px; margin-left: -22px;
+    transform-origin: 50% 27%; filter: drop-shadow(0 3px 2px rgba(11, 42, 91, .35));
   }
-  .reel.thunk { animation: thunk .3s ease-out; }
-  @keyframes thunk { 35% { transform: translateY(4px); } 100% { transform: none; } }
-  .strip { will-change: transform; }
-  .reel.fast .strip { filter: blur(1.4px); }
-  .item {
-    height: var(--item); display: flex; align-items: center; justify-content: center;
-    font-weight: 600; font-size: clamp(20px, 6.4vw, 28px); color: var(--midnight);
-    font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
-  .item.top { color: var(--party); }
-  /* a prize that is a word, like the art toy */
-  .item.word {
-    padding: 0 4px; font-size: clamp(13px, 3.8vw, 17px); font-weight: 700; line-height: 1.1;
-    color: var(--party); white-space: normal; text-align: center;
-  }
+  .wheel-box.won .pointer { animation: nod .5s ease-out 2; }
+  @keyframes nod { 50% { transform: translateY(-5px) scale(1.08); } }
   .cur { font-size: .66em; font-weight: 500; margin-right: 1px; opacity: .65; }
-  .payline {
-    position: absolute; left: 3px; right: 3px; top: 50%; height: calc(var(--item) + 6px); transform: translateY(-50%);
-    border: 3px solid var(--gold); border-radius: 14px; pointer-events: none; box-shadow: 0 0 16px rgba(255, 201, 74, .35);
-  }
-  .machine.won .payline { animation: flash .3s steps(1) 6; }
-  @keyframes flash { 50% { border-color: #fff; box-shadow: 0 0 26px rgba(255, 255, 255, .75); } }
   .spin-btn {
-    display: block; width: 100%; height: 58px; margin-top: 14px; border: 0; border-radius: 999px;
+    display: block; width: 100%; height: 58px; margin-top: 22px; border: 0; border-radius: 999px;
     font-size: 24px; font-weight: 700; color: var(--midnight); cursor: pointer;
     background: linear-gradient(180deg, #FFE08A, var(--gold));
-    box-shadow: 0 5px 0 var(--gold-deep), 0 10px 20px rgba(2, 8, 36, .35);
+    box-shadow: 0 5px 0 var(--gold-deep), 0 10px 20px rgba(15, 60, 130, .3);
     transition: transform .08s, box-shadow .08s;
   }
   .spin-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-deep); }
-  .spin-btn:disabled { cursor: default; color: rgba(234, 244, 255, .7); background: rgba(10, 27, 79, .5); box-shadow: inset 0 0 0 2px rgba(234, 244, 255, .16); }
+  .spin-btn:disabled { cursor: default; color: rgba(11, 42, 91, .55); background: rgba(255, 255, 255, .55); box-shadow: inset 0 0 0 2px rgba(11, 42, 91, .12); }
   .spin-btn.busy:disabled { color: var(--midnight); background: linear-gradient(180deg, #FFE08A, var(--gold)); opacity: .8; box-shadow: 0 2px 0 var(--gold-deep); }
 
   /* ---------- messages ---------- */
@@ -252,8 +234,8 @@
   @media (prefers-reduced-motion: reduce) {
     .gift, .balloon { animation: none; }
     .cloud { animation-play-state: paused; }
-    .machine.appear, .result.pop { animation-duration: .01s; }
-    .reel.fast .strip { filter: none; }
+    .wheel-box.appear, .result.pop { animation-duration: .01s; }
+    .wheel-box.won .pointer { animation: none; }
   }
 </style>
 </head>
@@ -286,13 +268,25 @@
       <span class="gift-lid"><span class="ribbon"></span><span class="bow"><i class="loop l"></i><i class="loop r"></i><i class="knot"></i></span></span>
     </button>
 
-    <div class="machine" id="machine" hidden>
-      <div class="bulbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="window" id="window" aria-hidden="true">
-        <div class="reel"><div class="strip"></div></div>
-        <div class="reel"><div class="strip"></div></div>
-        <div class="reel"><div class="strip"></div></div>
-        <div class="payline"></div>
+    <div class="wheel-box" id="machine" hidden>
+      <div class="wheel-wrap">
+        <svg class="pointer" id="pointer" viewBox="0 0 44 56" aria-hidden="true">
+          <defs><linearGradient id="pointerGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#F2B630"/></linearGradient></defs>
+          <path d="M22 53 L5.5 22 A18 18 0 1 1 38.5 22 Z" fill="url(#pointerGrad)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="22" cy="15" r="5" fill="#0B2A5B"/>
+        </svg>
+        <svg class="wheel" id="wheel" viewBox="0 0 340 340" aria-hidden="true">
+          <defs>
+            <linearGradient id="rimGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5AA2F5"/><stop offset="1" stop-color="#1553B0"/></linearGradient>
+            <radialGradient id="hubGrad" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFE9A8"/><stop offset="1" stop-color="#F2B630"/></radialGradient>
+          </defs>
+          <circle cx="170" cy="170" r="169" fill="url(#rimGrad)"/>
+          <g id="bulbs"></g>
+          <circle cx="170" cy="170" r="151" fill="#0B2A5B"/>
+          <g id="disc"></g>
+          <circle cx="170" cy="170" r="30" fill="url(#hubGrad)" stroke="#fff" stroke-width="5"/>
+          <path d="M170 157 L173.23 165.55 L182.36 165.98 L175.23 171.7 L177.64 180.52 L170 175.5 L162.36 180.52 L164.77 171.7 L157.64 165.98 L166.77 165.55 Z" fill="#fff"/>
+        </svg>
       </div>
       <button type="button" class="spin-btn" id="spin" disabled>Spin</button>
     </div>
@@ -353,11 +347,11 @@ const TEXT = {
   const DEMO = !/^https?:\/\//i.test(SCRIPT_URL.trim());
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const CODE = (new URLSearchParams(location.search).get('code') || '').trim();
-  const ITEM_H = 64, REPEATS = 14, SPEED = REDUCED ? 1100 : 1700, ACCEL = 5200;
+  const SPEED = REDUCED ? 360 : 760, ACCEL = 900; // wheel speed in degrees per second
 
   const $ = id => document.getElementById(id);
   const el = {
-    title: $('title'), sub: $('sub'), gift: $('gift'), machine: $('machine'), window: $('window'),
+    title: $('title'), sub: $('sub'), gift: $('gift'), machine: $('machine'), wheel: $('wheel'),
     spin: $('spin'), result: $('result'), resultHead: $('resultHead'), resultAmount: $('resultAmount'),
     resultNote: $('resultNote'), warning: $('warning'), error: $('error'), errorText: $('errorText'), retry: $('retry'),
   };
@@ -366,7 +360,7 @@ const TEXT = {
   const norm = v => typeof v === 'number' ? v : /^\s*-?\d+(\.\d+)?\s*$/.test(v) ? Number(v) : String(v ?? '').trim();
   const info = { name: '', prizes: [150, 250, 350, '1 art toy', 777], currency: '฿' };
   let phase = 'loading';
-  let reels = [];
+  let wheel = null;
   let retryAction = null;
 
   /* ---------------- talking to the Google Script ---------------- */
@@ -516,10 +510,19 @@ const TEXT = {
     f.addEventListener('animationend', () => f.remove());
   }
 
-  /* ---------------- reels ---------------- */
-  function shuffle(a) {
-    for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; }
-    return a;
+  /* ---------------- wheel ---------------- */
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const C = 170; // centre of the wheel drawing
+
+  function svgEl(tag, attrs) {
+    const n = document.createElementNS(SVG_NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    return n;
+  }
+  // a point on the wheel, `deg` degrees clockwise from the top
+  function polar(r, deg) {
+    const a = deg * Math.PI / 180;
+    return [C + r * Math.sin(a), C - r * Math.cos(a)];
   }
   function prizeNode(v) {
     if (typeof v !== 'number') return document.createTextNode(v);
@@ -531,45 +534,77 @@ const TEXT = {
     return frag;
   }
 
-  class Reel {
-    constructor(node, values) {
-      this.node = node;
-      this.strip = node.querySelector('.strip');
-      this.order = shuffle(values.slice());
-      this.n = this.order.length;
-      this.cycle = this.n * ITEM_H;
-      this.mode = 'idle'; this.v = 0; this.speed = 0; this.top = 0;
-      const top = Math.max(...values.filter(v => typeof v === 'number'));
-      this.strip.replaceChildren();
-      for (let r = 0; r < REPEATS; r++) {
-        for (const v of this.order) {
-          const d = document.createElement('div');
-          d.className = 'item' + (typeof v !== 'number' ? ' word' : v === top ? ' top' : '');
-          d.append(prizeNode(v));
-          this.strip.append(d);
+  class Wheel {
+    constructor(values) {
+      this.values = values.slice();
+      this.n = this.values.length;
+      this.seg = 360 / this.n; // every slice is the same size: every prize has the same chance
+      this.disc = $('disc');
+      this.pointer = $('pointer');
+      this.mode = 'idle'; this.v = 0; this.rot = 0; this.edge = 0;
+      this.draw();
+    }
+    draw() {
+      const { n, seg } = this;
+      for (let i = 0; i < n; i++) {
+        const v = this.values[i];
+        // blue and white take turns, a word prize (the art toy) is gold,
+        // and an odd count gets a light-blue last slice so it doesn't match the first
+        const fill = typeof v !== 'number' ? '#FFC94A' : i === n - 1 && n % 2 ? '#7CC4FF' : i % 2 ? '#FFFFFF' : '#1E6FD9';
+        const [x0, y0] = polar(148, i * seg), [x1, y1] = polar(148, (i + 1) * seg);
+        this.disc.append(svgEl('path', {
+          d: `M${C} ${C} L${x0} ${y0} A148 148 0 ${seg > 180 ? 1 : 0} 1 ${x1} ${y1} Z`,
+          fill, stroke: 'rgba(11,42,91,.18)', 'stroke-width': 1.5,
+        }));
+        const label = svgEl('text', {
+          x: C, y: C - 100, dy: '.35em', 'text-anchor': 'middle', fill: fill === '#1E6FD9' ? '#FFFFFF' : '#0B2A5B',
+          class: 'seg-label' + (typeof v === 'number' ? '' : ' word'),
+          transform: `rotate(${(i + .5) * seg} ${C} ${C})`,
+        });
+        if (typeof v === 'number') {
+          const cur = svgEl('tspan', { class: 'cur' });
+          cur.textContent = info.currency;
+          label.append(cur, v.toLocaleString());
+        } else {
+          label.textContent = v;
+        }
+        this.disc.append(label);
+      }
+      const bulbs = $('bulbs');
+      for (let i = 0; i < 20; i++) {
+        const [x, y] = polar(160, i * 18 + 9);
+        bulbs.append(svgEl('circle', { class: 'bulb', cx: x, cy: y, r: 4.2 }));
+      }
+    }
+    angleFor(i) { return -(i + .5) * this.seg; } // rotation that puts the middle of slice i under the pointer
+    set(r) {
+      this.rot = r;
+      this.disc.setAttribute('transform', `rotate(${(r % 360).toFixed(2)} ${C} ${C})`);
+      const edge = Math.floor(r / this.seg);
+      if (edge !== this.edge) { // a slice edge just passed the pointer: flick it
+        this.edge = edge;
+        if (!REDUCED && this.mode !== 'idle' && this.pointer.animate) {
+          this.pointer.animate([{ transform: 'rotate(0)' }, { transform: 'rotate(-18deg)' }, { transform: 'rotate(0)' }], { duration: 150, easing: 'ease-out' });
         }
       }
     }
-    topFor(i) { return (i - 1) * ITEM_H; } // scroll position that puts item i on the gold line
-    set(t) { this.top = t; this.strip.style.transform = `translate3d(0, ${-t}px, 0)`; }
     rest(value) {
-      const idx = Math.max(0, this.order.indexOf(norm(value)));
+      const idx = Math.max(0, this.values.indexOf(norm(value)));
       this.mode = 'idle'; this.v = 0;
-      this.set(this.topFor(10 * this.n + idx));
+      this.set(((this.angleFor(idx) % 360) + 360) % 360);
     }
-    start(delay) { this.mode = 'run'; this.v = 0; this.startAt = performance.now() + delay; }
+    start() { this.mode = 'run'; this.v = 0; }
     stopOn(value) {
       return new Promise(resolve => {
-        value = norm(value);
-        const v = Math.max(this.v, 600);
-        const limit = this.top - this.cycle; // always roll at least one more lap
-        let i = Math.floor(limit / ITEM_H) + 1;
-        let guard = this.n * 3;
-        while (guard-- > 0 && (this.order[((i % this.n) + this.n) % this.n] !== value || this.topFor(i) > limit)) i--;
-        const target = this.topFor(i);
-        this.from = this.top;
-        this.dist = this.top - target;
-        this.dur = Math.min(2600, Math.max(450, (3 * this.dist / v) * 1000)); // ease-out that starts at the current speed
+        const idx = Math.max(0, this.values.indexOf(norm(value)));
+        const v = Math.max(this.v, 300);
+        // land somewhere inside the slice, never right on an edge
+        const want = this.angleFor(idx) + (Math.random() - .5) * this.seg * .6;
+        let target = this.rot + v * (REDUCED ? 1.2 : 4) / 3; // slowing from the current speed takes about 4s
+        target += (((want - target) % 360) + 360) % 360;
+        this.from = this.rot;
+        this.dist = target - this.rot;
+        this.dur = (3 * this.dist / v) * 1000; // ease-out that starts at the current speed
         this.s0 = performance.now();
         this.mode = 'stop';
         this.done = resolve;
@@ -579,27 +614,16 @@ const TEXT = {
     update(now, dt) {
       if (this.mode === 'idle') return false;
       if (this.mode === 'run') {
-        if (now < this.startAt) return true;
         this.v = Math.min(SPEED, this.v + ACCEL * dt);
-        let t = this.top - this.v * dt;
-        if (t < 4 * this.cycle) t += 6 * this.cycle; // seamless wrap: the strip repeats
-        this.set(t);
-        this.speed = this.v;
-      } else {
-        const t = Math.min(1, (now - this.s0) / this.dur);
-        this.set(this.from - this.dist * (1 - Math.pow(1 - t, 3)));
-        this.speed = (3 * this.dist / (this.dur / 1000)) * Math.pow(1 - t, 2);
-        if (t >= 1) {
-          this.mode = 'idle'; this.v = 0; this.speed = 0;
-          this.node.classList.remove('fast', 'thunk');
-          void this.node.offsetWidth;
-          this.node.classList.add('thunk');
-          this.done();
-          return false;
-        }
+        this.set(this.rot + this.v * dt);
+        return true;
       }
-      this.node.classList.toggle('fast', !REDUCED && this.speed > 700);
-      return true;
+      const t = Math.min(1, (now - this.s0) / this.dur);
+      this.set(this.from + this.dist * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) return true;
+      this.mode = 'idle'; this.v = 0;
+      this.done();
+      return false;
     }
   }
 
@@ -612,17 +636,13 @@ const TEXT = {
   function tick(now) {
     const dt = Math.min(.05, (now - lastT) / 1000);
     lastT = now;
-    let active = false;
-    for (const r of reels) active = r.update(now, dt) || active;
-    raf = active ? requestAnimationFrame(tick) : 0;
+    raf = wheel && wheel.update(now, dt) ? requestAnimationFrame(tick) : 0;
   }
 
-  function buildReels() {
-    if (reels.length) return;
-    const nodes = el.window.querySelectorAll('.reel');
-    reels = Array.from(nodes, n => new Reel(n, info.prizes));
-    const p = info.prizes;
-    reels.forEach((r, k) => r.rest(p[(k * 2) % p.length])); // start on three different amounts
+  function buildWheel() {
+    if (wheel) return;
+    wheel = new Wheel(info.prizes);
+    wheel.set(Math.random() * 360);
   }
 
   /* ---------------- screens ---------------- */
@@ -643,7 +663,7 @@ const TEXT = {
   function hideError() { el.error.hidden = true; }
 
   function showMachine(animate) {
-    buildReels();
+    buildWheel();
     el.gift.hidden = true;
     el.machine.hidden = false;
     if (animate) el.machine.classList.add('appear');
@@ -680,7 +700,7 @@ const TEXT = {
 
   function showSpun(s) {
     showMachine(false);
-    reels.forEach(r => r.rest(s.prize));
+    wheel.rest(s.prize);
     finish(s, 'already');
   }
 
@@ -694,7 +714,7 @@ const TEXT = {
   }
 
   function celebrate(prize) {
-    const r = el.window.getBoundingClientRect();
+    const r = el.wheel.getBoundingClientRect();
     const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     const amounts = info.prizes.filter(p => typeof p === 'number').sort((a, b) => a - b);
     // a word prize (the art toy) gets the biggest party
@@ -727,13 +747,12 @@ const TEXT = {
     showMachine(true);
     el.sub.textContent = TEXT.readyToSpin;
     el.spin.disabled = false;
-    phase = 'slot';
+    phase = 'wheel';
     el.spin.focus({ preventScroll: true });
   }
 
   async function stopNeutral() {
-    const p = shuffle(info.prizes.slice());
-    await Promise.all(reels.map((r, k) => r.stopOn(p[k % p.length])));
+    await wheel.stopOn(info.prizes[(Math.random() * info.prizes.length) | 0]);
   }
 
   async function spinFailed(message) {
@@ -742,19 +761,19 @@ const TEXT = {
     el.spin.classList.remove('busy');
     el.spin.textContent = TEXT.spin;
     el.spin.disabled = false;
-    phase = 'slot';
+    phase = 'wheel';
     showError(message);
   }
 
   async function doSpin() {
-    if (phase !== 'slot') return;
+    if (phase !== 'wheel') return;
     phase = 'spinning';
     hideError();
     el.spin.disabled = true;
     el.spin.classList.add('busy');
     el.spin.textContent = TEXT.spinning;
     el.machine.classList.add('spinning');
-    reels.forEach((r, k) => r.start(k * 90));
+    wheel.start();
     loop();
 
     const minSpin = sleep(REDUCED ? 500 : 1400);
@@ -772,13 +791,8 @@ const TEXT = {
       return spinFailed(TEXT.spinFailed);
     }
 
-    // Stop the reels one by one on the prize the server picked
-    const stops = [];
-    for (let k = 0; k < reels.length; k++) {
-      stops.push(reels[k].stopOn(res.prize));
-      if (k < reels.length - 1) await sleep(REDUCED ? 120 : 430);
-    }
-    await Promise.all(stops);
+    // Slow the wheel down onto the prize the server picked
+    await wheel.stopOn(res.prize);
     finish(res, res.already ? 'already' : 'new');
   }
 
