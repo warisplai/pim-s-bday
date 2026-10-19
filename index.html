@@ -105,8 +105,8 @@
     text-shadow: 0 3px 0 #fff, 0 7px 14px rgba(15, 85, 194, .25);
   }
   .sub {
-    margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; color: var(--ink-soft);
-    transition: transform .25s cubic-bezier(.2, .9, .25, 1.5);
+    margin: 12px 0 0; min-height: 1.4em; font-size: 18px; font-weight: 500; line-height: 1.4; color: var(--ink-soft);
+    white-space: pre-line; text-wrap: balance; transition: transform .25s cubic-bezier(.2, .9, .25, 1.5);
   }
   /* the stage keeps the wheel's height, so nothing jumps when the present turns into it */
   .stage {
@@ -346,7 +346,7 @@ const TEXT = {
   zeroHead: 'No luck this time',
   alreadyWonHead: 'You already spun and won',
   alreadyZeroHead: 'You already spun and got',
-  doneSub: 'Here’s your birthday prize',
+  doneSub: 'ถ้าไม่ชอบรางวัลก็ขอร้องกุสิ\nเดี๋ยวให้สุ่มใหม่ 1 ครั้ง', // \n starts a new line
   savedNote: 'That was your one spin.',
   alreadySub: 'You’ve already used your spin',
   alreadyNote: '',
@@ -375,7 +375,10 @@ const TEXT = {
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   // A prize is an amount (150) or a word ('1 art toy'). Amounts that arrive as text become numbers again.
   const norm = v => typeof v === 'number' ? v : /^\s*-?\d+(\.\d+)?\s*$/.test(v) ? Number(v) : String(v ?? '').trim();
-  const info = { name: '', prizes: [150, 777, 250, 350, '1 art toy'], currency: '฿' };
+  // Order of the slices round the wheel, clockwise. Keeps the big prizes (777, art toy) apart.
+  // The Google Script decides which prizes exist; any it adds that aren't listed here go at the end.
+  const WHEEL_ORDER = [150, 777, 250, 350, '1 art toy'];
+  const info = { name: '', prizes: WHEEL_ORDER.slice(), currency: '฿' };
   const GIFT_TAPS = 3; // taps it takes to open the present
   let phase = 'loading';
   let wheel = null;
@@ -412,7 +415,7 @@ const TEXT = {
     let mem = null;
     const load = () => { try { const v = localStorage.getItem(KEY); return v ? JSON.parse(v) : mem; } catch { return mem; } };
     const save = v => { mem = v; try { v ? localStorage.setItem(KEY, JSON.stringify(v)) : localStorage.removeItem(KEY); } catch {} };
-    const meta = () => ({ name: '', prizes: [150, 777, 250, 350, '1 art toy'], currency: '฿' });
+    const meta = () => ({ name: '', prizes: WHEEL_ORDER.slice(), currency: '฿' });
     return {
       async status() {
         await sleep(450);
@@ -687,7 +690,10 @@ const TEXT = {
 
   /* ---------------- screens ---------------- */
   function applyInfo(s) {
-    if (Array.isArray(s.prizes) && s.prizes.length) info.prizes = s.prizes.map(norm);
+    if (Array.isArray(s.prizes) && s.prizes.length) {
+      const place = p => { const i = WHEEL_ORDER.indexOf(p); return i < 0 ? WHEEL_ORDER.length : i; };
+      info.prizes = s.prizes.map(norm).sort((a, b) => place(a) - place(b));
+    }
     if (typeof s.currency === 'string') info.currency = s.currency;
     info.name = s.name || '';
     el.title.textContent = TEXT.title(info.name);
@@ -780,10 +786,10 @@ const TEXT = {
   }
   el.gift.addEventListener('animationend', e => { if (e.animationName === 'shake' && phase === 'gift') el.gift.classList.remove('shaking'); });
 
-  function tapGift() {
+  function tapGift(e) {
     if (phase !== 'gift') return;
     taps++;
-    if (taps >= GIFT_TAPS) return openGift();
+    if (taps >= GIFT_TAPS) return openGift(e.detail === 0); // detail 0: pressed with the keyboard, not tapped
     hideError();
     el.sub.textContent = GIFT_TAPS - taps === 1 ? TEXT.tapLast : TEXT.tapAgain;
     el.sub.style.transform = `scale(${1 + taps * .5})`; // the hint grows with every tap
@@ -793,7 +799,7 @@ const TEXT = {
     fx.burst(b.left + b.width / 2, b.top + b.height / 3, { count: 10 + taps * 10, speed: [150, 420], up: 160, life: [.9, 1.5] });
   }
 
-  async function openGift() {
+  async function openGift(byKeyboard) {
     if (phase !== 'gift') return;
     phase = 'opening';
     hideError();
@@ -814,7 +820,7 @@ const TEXT = {
     el.sub.textContent = TEXT.readyToSpin;
     el.spin.disabled = false;
     phase = 'wheel';
-    el.spin.focus({ preventScroll: true });
+    if (byKeyboard) el.spin.focus({ preventScroll: true }); // keyboard users land on Spin; a tap doesn't get a focus ring
   }
 
   async function stopNeutral() {
