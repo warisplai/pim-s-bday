@@ -336,9 +336,9 @@ const TEXT = {
   alreadyWonHead: 'You already spun and won',
   alreadyZeroHead: 'You already spun and got',
   doneSub: 'Here’s your birthday prize',
-  savedNote: when => `Saved on ${when}. That was your one spin.`,
+  savedNote: 'That was your one spin.',
   alreadySub: 'You’ve already used your spin',
-  alreadyNote: when => `You spun on ${when}.`,
+  alreadyNote: '',
   invalidSub: 'This link doesn’t work',
   invalidNote: 'Ask the person who sent it to you for a new link.',
   offline: 'Can’t connect right now. Check your internet, then try again.',
@@ -652,23 +652,17 @@ const TEXT = {
   function showResult(res, kind) {
     const prize = norm(res.prize);
     const zero = typeof prize === 'number' && prize <= 0;
-    const when = formatTime(res.time);
     el.resultHead.textContent = kind === 'new'
       ? (zero ? TEXT.zeroHead : TEXT.wonHead)
       : (zero ? TEXT.alreadyZeroHead : TEXT.alreadyWonHead);
     el.resultAmount.classList.toggle('word', typeof prize !== 'number');
     el.resultAmount.replaceChildren(prizeNode(prize));
-    el.resultNote.textContent = kind === 'new' ? TEXT.savedNote(when) : TEXT.alreadyNote(when);
+    el.resultNote.textContent = kind === 'new' ? TEXT.savedNote : TEXT.alreadyNote;
+    el.resultNote.hidden = !el.resultNote.textContent;
     el.result.hidden = false;
     el.result.classList.remove('pop');
     void el.result.offsetWidth;
     el.result.classList.add('pop');
-  }
-
-  function formatTime(iso) {
-    const d = new Date(iso);
-    if (isNaN(d)) return String(iso || '');
-    return d.toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
   function finish(res, kind) {
