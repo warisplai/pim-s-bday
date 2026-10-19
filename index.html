@@ -191,7 +191,7 @@
   @keyframes blink { 0% { opacity: 1; } 50% { opacity: .25; } }
   .pointer {
     position: absolute; z-index: 1; left: 50%; top: -14px; width: 44px; height: 56px; margin-left: -22px;
-    transform-origin: 50% 27%; filter: drop-shadow(0 3px 2px rgba(11, 42, 91, .35));
+    transform-origin: 50% 27%; overflow: visible; filter: drop-shadow(0 3px 2px rgba(11, 42, 91, .35));
   }
   .wheel-box.won .pointer { animation: nod .5s ease-out 2; }
   @keyframes nod { 50% { transform: translateY(-5px) scale(1.08); } }
@@ -277,8 +277,10 @@
       <div class="wheel-wrap">
         <svg class="pointer" id="pointer" viewBox="0 0 44 56" aria-hidden="true">
           <defs><linearGradient id="pointerGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE08A"/><stop offset="1" stop-color="#F2B630"/></linearGradient></defs>
-          <path d="M22 53 L5.5 22 A18 18 0 1 1 38.5 22 Z" fill="url(#pointerGrad)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
-          <circle cx="22" cy="15" r="5" fill="#0B2A5B"/>
+          <g id="pointerArm">
+            <path d="M22 53 L5.5 22 A18 18 0 1 1 38.5 22 Z" fill="url(#pointerGrad)" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+            <circle cx="22" cy="15" r="5" fill="#0B2A5B"/>
+          </g>
         </svg>
         <svg class="wheel" id="wheel" viewBox="0 0 340 340" aria-hidden="true">
           <defs>
@@ -365,7 +367,6 @@ const TEXT = {
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const CODE = (new URLSearchParams(location.search).get('code') || '').trim();
   const SPEED = REDUCED ? 360 : 900, ACCEL = 1100; // wheel speed in degrees per second
-  const SLOWMO_MS = 1000; // how long a slow-motion moment lasts
 
   const $ = id => document.getElementById(id);
   const el = {
@@ -562,8 +563,9 @@ const TEXT = {
       this.n = this.values.length;
       this.seg = 360 / this.n; // every slice is the same size: every prize has the same chance
       this.disc = $('disc');
-      this.pointer = $('pointer');
-      this.mode = 'idle'; this.v = 0; this.speed = 0; this.rot = 0; this.edge = 0; this.slowmoAt = null;
+      this.pointer = $('pointerArm');
+      this.mode = 'idle'; this.v = 0; this.speed = 0; this.rot = 0; this.edge = 0;
+      this.tilt = 0; this.tiltV = 0; // pointer angle (degrees) and how fast it's swinging
       this.draw();
     }
     draw() {
@@ -625,16 +627,22 @@ const TEXT = {
       this.rot = r;
       this.disc.setAttribute('transform', `rotate(${(r % 360).toFixed(2)} ${C} ${C})`);
       const edge = Math.floor(r / this.seg);
-      if (edge !== this.edge) { // a slice edge just passed the pointer: flick it
+      if (edge !== this.edge) { // a slice edge just hit the pointer: kick it up (harder when the wheel is slow)
         this.edge = edge;
-        if (!REDUCED && this.mode !== 'idle' && this.pointer.animate) {
-          // 0 when fast, 1 when barely moving or in slow motion
-          const crawl = this.slowmoAt !== null ? 1 : Math.min(1, Math.max(0, (300 - this.speed) / 300));
-          this.pointer.animate(
-            [{ transform: 'rotate(0)' }, { transform: `rotate(${-18 - crawl * 12}deg)` }, { transform: 'rotate(0)' }],
-            { duration: this.slowmoAt !== null ? 700 : 150 + crawl * 300, easing: 'ease-out' });
+        if (!REDUCED && this.mode !== 'idle') {
+          this.tilt = -18 - 10 * Math.min(1, Math.max(0, (300 - this.speed) / 300));
+          this.tiltV = 0;
         }
       }
+    }
+    // The pointer falls back on a soft spring: slowly, with a small bounce. Returns false once it's still.
+    swing(dt) {
+      if (!this.tilt && !this.tiltV) return false;
+      this.tiltV += (-10 * this.tilt - 3.4 * this.tiltV) * dt; // lower numbers = slower fall
+      this.tilt += this.tiltV * dt;
+      if (Math.abs(this.tilt) < .05 && Math.abs(this.tiltV) < .05) { this.tilt = 0; this.tiltV = 0; }
+      this.pointer.setAttribute('transform', `rotate(${this.tilt.toFixed(2)} 22 15)`);
+      return true;
     }
     rest(value) {
       const idx = Math.max(0, this.values.indexOf(norm(value)));
@@ -655,7 +663,7 @@ const TEXT = {
           : -idx * this.seg - hair;                             // almost slipped on to the next prize
         // Braking has two parts. First the wheel stays fast and only drops to `crawl` degrees a second
         // just before the last block; then it crawls over the last `creep` degrees (less than one block,
-        // so the slow part never drags across two). Along the way a couple of edges get a slow-motion moment.
+        // so the slow part never drags across two).
         const slow = tense && !REDUCED;
         this.v0 = v;
         this.crawl = slow ? 28 : 150;
@@ -664,33 +672,10 @@ const TEXT = {
         target += (((want - target) % 360) + 360) % 360;
         this.target = target;
         this.brake = target - this.creep - this.rot; // length of the first part
-        this.slowmos = slow ? 2 : 0; // slow-motion moments still allowed
-        this.slowmoAt = null; this.considered = null; this.calmUntil = -Infinity;
         this.mode = 'stop';
         this.done = resolve;
         loop();
       });
-    }
-    // 1 = normal speed. Sometimes, just as the pointer reaches an edge (but not in the last two blocks),
-    // time drops to slow motion for a second and then snaps back.
-    timeScale(now, r) {
-      if (this.slowmoAt !== null) {
-        const p = (now - this.slowmoAt) / SLOWMO_MS;
-        if (p < 1) return 1 - .85 * Math.min(1, Math.sin(Math.PI * p) * 1.6);
-        this.slowmoAt = null;
-      }
-      const edge = Math.floor(this.rot / this.seg);
-      if (this.slowmos > 0 && r > this.creep + this.seg * 1.5 && edge !== this.considered && edge >= this.calmUntil) {
-        const toEdge = (edge + 1) * this.seg - this.rot;
-        if (toEdge < this.speed * .12) { // about to reach this edge: roll the dice once for it
-          this.considered = edge;
-          if (Math.random() < .3) {
-            this.slowmoAt = now; this.slowmos--;
-            this.calmUntil = edge + 4; // let a few edges go by at full speed before the next one
-          }
-        }
-      }
-      return 1;
     }
     update(now, dt) {
       if (this.mode === 'idle') return false;
@@ -705,9 +690,9 @@ const TEXT = {
       this.speed = r > this.creep
         ? this.crawl + (this.v0 - this.crawl) * (1 - (1 - u) * (1 - u)) // stays fast, drops off just before the last block
         : this.crawl * Math.sqrt(r / this.creep); // steady gentle braking: comes to rest exactly on target
-      this.set(this.rot + Math.min(r, Math.max(this.speed, .5) * dt * this.timeScale(now, r)));
+      this.set(this.rot + Math.min(r, Math.max(this.speed, .5) * dt));
       if (this.target - this.rot > 1e-4) return true;
-      this.mode = 'idle'; this.v = 0; this.speed = 0; this.slowmoAt = null;
+      this.mode = 'idle'; this.v = 0; this.speed = 0;
       this.done();
       return false;
     }
@@ -722,7 +707,9 @@ const TEXT = {
   function tick(now) {
     const dt = Math.min(.05, (now - lastT) / 1000);
     lastT = now;
-    raf = wheel && wheel.update(now, dt) ? requestAnimationFrame(tick) : 0;
+    const turning = !!wheel && wheel.update(now, dt);
+    const swinging = !!wheel && wheel.swing(dt); // the pointer can still be falling back after the wheel stops
+    raf = turning || swinging ? requestAnimationFrame(tick) : 0;
   }
 
   function buildWheel() {
